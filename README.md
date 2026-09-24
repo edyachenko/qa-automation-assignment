@@ -44,11 +44,16 @@ mvn allure:report   # або allure:serve
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`): push/PR у `main` або запуск вручну → `mvn test` на JDK 17 → Allure-звіт → обидва (`allure-results` і готовий report) заливаються як build artifacts, навіть якщо тести впали.
+GitHub Actions (`.github/workflows/ci.yml`), дві job:
+
+- **test** — push/PR у `main` або запуск вручну → `mvn test` на JDK 17 → Allure-звіт → `allure-results` і готовий report заливаються як build artifacts, навіть якщо тести впали
+- **publish-report** — тільки на push у `main`: бере `allure-results` з job `test`, генерує звіт і публікує на **GitHub Pages** (живе посилання, не архів для качання)
 
 Креденшели беруться **тільки** з GitHub Secrets (`AUTH_USERNAME`, `AUTH_PASSWORD`) — у самому workflow-файлі їх немає. Додати: **Settings → Secrets and variables → Actions → New repository secret**. Без них CI одразу впаде з чіткою помилкою (`Missing config value: auth.username`), а не мовчки пройде з чимось невідомим.
 
-Бейдж може бути червоним — CI навмисно не приховує 6 тестів, що ловлять реальні дефекти сервіса (див. вище).
+Бейдж може бути червоним — CI навмисно не приховує 6 тестів, що ловлять реальні дефекти сервіса (див. вище); `publish-report` при цьому все одно публікує звіт (`if: always()`), щоб дефекти було видно, а не приховано.
+
+**Один раз перед першим запуском:** Settings → Pages → Build and deployment → Source: **GitHub Actions** (без цього job `publish-report` впаде на кроці деплою). Після цього звіт живе за адресою `https://edyachenko.github.io/qa-automation-assignment/`.
 
 ## Звітність
 
