@@ -95,6 +95,11 @@
       <version>${graphql-codegen.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.graphql-java</groupId>
+      <artifactId>graphql-java</artifactId>
+      <version>26.1</version>
+    </dependency>
+    <dependency>
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
       <version>2.0.1.Final</version>
@@ -107,31 +112,31 @@
         <groupId>io.github.kobylynskyi</groupId>
         <artifactId>graphql-codegen-maven-plugin</artifactId>
         <version>${graphql-codegen.version}</version>
+        <configuration>
+          <graphqlQueryIntrospectionResultPath>${project.basedir}/src/main/graphql/schema.json</graphqlQueryIntrospectionResultPath>
+          <outputDir>${project.build.directory}/generated-sources/graphql</outputDir>
+          <packageName>com.flamingo.qa.graphql.generated</packageName>
+          <generateClient>true</generateClient>
+          <generateApis>false</generateApis>
+          <generateToString>true</generateToString>
+          <generateEqualsAndHashCode>true</generateEqualsAndHashCode>
+          <generateParameterizedFieldsResolvers>false</generateParameterizedFieldsResolvers>
+          <customTypesMapping>
+            <DateTime>String</DateTime>
+            <Date>String</Date>
+            <Hex>String</Hex>
+            <Long>Long</Long>
+            <RGBAHue>Integer</RGBAHue>
+            <RGBATransparency>Double</RGBATransparency>
+            <Json>Object</Json>
+            <RichTextAST>Object</RichTextAST>
+          </customTypesMapping>
+        </configuration>
         <executions>
           <execution>
             <goals>
               <goal>generate</goal>
             </goals>
-            <configuration>
-              <graphqlQueryIntrospectionResultPath>${project.basedir}/src/main/graphql/schema.json</graphqlQueryIntrospectionResultPath>
-              <outputDir>${project.build.directory}/generated-sources/graphql</outputDir>
-              <packageName>com.flamingo.qa.graphql.generated</packageName>
-              <generateClient>true</generateClient>
-              <generateApis>false</generateApis>
-              <generateToString>true</generateToString>
-              <generateEqualsAndHashCode>true</generateEqualsAndHashCode>
-              <generateParameterizedFieldsResolvers>false</generateParameterizedFieldsResolvers>
-              <customTypesMapping>
-                <DateTime>String</DateTime>
-                <Date>String</Date>
-                <Hex>String</Hex>
-                <Long>Long</Long>
-                <RGBAHue>Integer</RGBAHue>
-                <RGBATransparency>Double</RGBATransparency>
-                <Json>Object</Json>
-                <RichTextAST>Object</RichTextAST>
-              </customTypesMapping>
-            </configuration>
           </execution>
         </executions>
       </plugin>
