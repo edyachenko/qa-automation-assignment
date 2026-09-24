@@ -1,4 +1,4 @@
-package com.flamingo.qa.tests;
+package com.flamingo.qa.config;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +7,9 @@ import lombok.experimental.UtilityClass;
 @Getter
 @RequiredArgsConstructor
 public enum TestTag {
-    //todo move somewhere else
-    API(Names.API);
+
+    API(Names.API),
+    GRAPHQL(Names.GRAPHQL);
 
     private final String value;
 
@@ -16,5 +17,6 @@ public enum TestTag {
     public static class Names {
 
         public final String API = "api";
+        public final String GRAPHQL = "graphql";
     }
 }

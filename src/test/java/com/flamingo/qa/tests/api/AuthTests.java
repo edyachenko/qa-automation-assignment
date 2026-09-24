@@ -1,4 +1,4 @@
-package com.flamingo.qa.tests;
+package com.flamingo.qa.tests.api;
 
 import com.flamingo.qa.dto.request.AuthRequest;
 import com.flamingo.qa.extension.AuthDataExtension;

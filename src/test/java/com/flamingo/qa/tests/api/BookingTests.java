@@ -1,4 +1,4 @@
-package com.flamingo.qa.tests;
+package com.flamingo.qa.tests.api;
 
 import com.flamingo.qa.data.BookingData;
 import com.flamingo.qa.data.RequiredBookingField;
