@@ -19,6 +19,14 @@ public class BookingIdsResponseAssert extends ResponseAssert<BookingIdsResponseA
         return this;
     }
 
+    public BookingIdsResponseAssert shouldContain(Integer id) {
+        assertThat(body(BookingIdResponse[].class))
+                .as("booking ids")
+                .extracting(BookingIdResponse::bookingid)
+                .contains(id);
+        return this;
+    }
+
     public BookingIdsResponseAssert shouldBeEmpty() {
         assertThat(body(BookingIdResponse[].class)).as("booking ids").isEmpty();
         return this;

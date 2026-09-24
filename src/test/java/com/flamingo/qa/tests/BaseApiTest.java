@@ -2,13 +2,10 @@ package com.flamingo.qa.tests;
 
 import com.flamingo.qa.api.AuthClient;
 import com.flamingo.qa.api.BookingClient;
-import com.flamingo.qa.extension.BookingDataExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-@Tag("api")
-@ExtendWith(BookingDataExtension.class)
+@Tag(TestTag.Names.API)
 public abstract class BaseApiTest {
 
     protected final AuthClient authClient = new AuthClient();

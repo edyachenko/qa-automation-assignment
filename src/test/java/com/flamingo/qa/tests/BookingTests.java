@@ -1,45 +1,19 @@
 package com.flamingo.qa.tests;
 
 import com.flamingo.qa.data.BookingData;
+import com.flamingo.qa.dto.BookingDates;
 import com.flamingo.qa.dto.request.BookingRequest;
+import com.flamingo.qa.extension.BookingDataExtension;
 import com.flamingo.qa.extension.ExistingBooking;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_FORBIDDEN;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpStatus.*;
 
 @DisplayName("Bookings")
 class BookingTests extends BaseApiTest {
-
-    //todos:
-    /*
-        APi:
-      add auth test
-      add crud tests
-      At least 3 API tests covering CRUD operations:
-      positive (includeing busines logic , like checking cannot be later than checkout, etc)
-      1. create booking and retrieve (delete of booking is on after hook)
-      2. create booking + update + get + some filter 1 ?firstname=sally&lastname=brown
-      3. create booking + patch + get + some filter 2 ?checkin=2014-03-13&checkout=2014-05-21
-
-      negative
-      1. create without required fields
-      2. unable to update booking dates of checking checkout (swap) or else
-      3. create the same bookings on the same time
-      4. try to update booking without token (Creates a new auth token to use for access to the PUT and DELETE /booking)
-
-
-
-
-    Basic assertions using AssertJ
-
-
-     */
 
     @Nested
     @DisplayName("POST /booking")
@@ -47,6 +21,7 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("creates a booking and returns it with a new id")
+        @ExtendWith(BookingDataExtension.class)
         void createsBooking(BookingRequest booking) {
             bookingClient.createBooking(booking)
                     .shouldHaveStatus(SC_OK)
@@ -60,6 +35,14 @@ class BookingTests extends BaseApiTest {
             bookingClient.createBooking(BookingData.withoutFirstname())
                     .shouldHaveStatus(SC_INTERNAL_SERVER_ERROR);
         }
+
+        @Test
+        @DisplayName("rejects the same booking for the same guest and dates twice")
+        @ExtendWith(BookingDataExtension.class)
+        void rejectsDuplicateBooking(ExistingBooking booking) {
+            bookingClient.createBooking(booking.request())
+                    .shouldHaveStatus(SC_CONFLICT);
+        }
     }
 
     @Nested
@@ -68,10 +51,12 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("returns an existing booking")
+        @ExtendWith(BookingDataExtension.class)
         void returnsExistingBooking(ExistingBooking booking) {
             bookingClient.getBooking(booking.id())
                     .shouldHaveStatus(SC_OK)
-                    .shouldHaveBooking(booking.request());
+                    .shouldHaveBooking(booking.request())
+                    .shouldHaveCheckoutAfterCheckin();
         }
 
         @Test
@@ -88,6 +73,7 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("finds a booking by first and last name")
+        @ExtendWith(BookingDataExtension.class)
         void findsBookingByName(ExistingBooking booking) {
             bookingClient.searchBookings(booking.request().firstname(), booking.request().lastname())
                     .shouldHaveStatus(SC_OK)
@@ -108,15 +94,37 @@ class BookingTests extends BaseApiTest {
     class Update {
 
         @Test
-        @DisplayName("replaces the booking for an authorized user")
+        @DisplayName("replaces the booking for an authorized user and finds it by the new name")
+        @ExtendWith(BookingDataExtension.class)
         void replacesBookingWithToken(ExistingBooking booking, BookingRequest changed) {
             asAdmin().updateBooking(booking.id(), changed)
                     .shouldHaveStatus(SC_OK)
                     .shouldHaveBooking(changed);
+
+            bookingClient.getBooking(booking.id())
+                    .shouldHaveStatus(SC_OK)
+                    .shouldHaveBooking(changed);
+
+            bookingClient.searchBookings(changed.firstname(), changed.lastname())
+                    .shouldHaveStatus(SC_OK)
+                    .shouldContainOnly(booking.id());
+        }
+
+        @Test
+        @DisplayName("rejects dates where check-out is before check-in and changes nothing")
+        @ExtendWith(BookingDataExtension.class)
+        void rejectsSwappedDates(ExistingBooking booking) {
+            asAdmin().updateBooking(booking.id(), BookingData.withSwappedDates(booking.request()))
+                    .shouldHaveStatus(SC_BAD_REQUEST);
+
+            bookingClient.getBooking(booking.id())
+                    .shouldHaveStatus(SC_OK)
+                    .shouldHaveBooking(booking.request());
         }
 
         @Test
         @DisplayName("is forbidden without a token and changes nothing")
+        @ExtendWith(BookingDataExtension.class)
         void isForbiddenWithoutToken(ExistingBooking booking, BookingRequest changed) {
             bookingClient.updateBooking(booking.id(), changed)
                     .shouldHaveStatus(SC_FORBIDDEN);
@@ -132,16 +140,29 @@ class BookingTests extends BaseApiTest {
     class PartialUpdate {
 
         @Test
-        @DisplayName("changes only the given field")
-        void changesOnlyGivenField(ExistingBooking booking) {
-            asAdmin().partialUpdateBooking(booking.id(), BookingData.firstnameOnly("Patched"))
+        @DisplayName("changes only the dates and finds the booking by the new dates")
+        @ExtendWith(BookingDataExtension.class)
+        void changesOnlyDatesAndFindsBookingByThem(ExistingBooking booking) {
+            BookingDates newDates = BookingData.randomDates();
+
+            asAdmin().partialUpdateBooking(booking.id(), BookingData.datesOnly(newDates))
                     .shouldHaveStatus(SC_OK)
-                    .shouldHaveFirstname("Patched")
-                    .shouldHaveBookingIgnoring(booking.request(), "firstname");
+                    .shouldHaveDates(newDates)
+                    .shouldHaveBookingIgnoring(booking.request(), "bookingdates");
+
+            bookingClient.getBooking(booking.id())
+                    .shouldHaveStatus(SC_OK)
+                    .shouldHaveDates(newDates)
+                    .shouldHaveBookingIgnoring(booking.request(), "bookingdates");
+
+            bookingClient.searchBookingsByDates(newDates.checkin(), newDates.checkout())
+                    .shouldHaveStatus(SC_OK)
+                    .shouldContain(booking.id());
         }
 
         @Test
         @DisplayName("is forbidden without a token")
+        @ExtendWith(BookingDataExtension.class)
         void isForbiddenWithoutToken(ExistingBooking booking) {
             bookingClient.partialUpdateBooking(booking.id(), BookingData.firstnameOnly("Patched"))
                     .shouldHaveStatus(SC_FORBIDDEN);
@@ -154,6 +175,7 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("removes the booking for an authorized user")
+        @ExtendWith(BookingDataExtension.class)
         void removesBookingWithToken(ExistingBooking booking) {
             asAdmin().deleteBooking(booking.id())
                     .shouldHaveStatus(SC_CREATED);
@@ -164,6 +186,7 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("is forbidden without a token and keeps the booking")
+        @ExtendWith(BookingDataExtension.class)
         void isForbiddenWithoutToken(ExistingBooking booking) {
             bookingClient.deleteBooking(booking.id())
                     .shouldHaveStatus(SC_FORBIDDEN);
