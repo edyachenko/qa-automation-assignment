@@ -1,4 +1,7 @@
 package com.flamingo.qa.dto.response;
 
-public record BookingIdResponse(int bookingid) {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record BookingIdResponse(
+        @JsonProperty("bookingid") int bookingid) {
 }

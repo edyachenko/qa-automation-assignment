@@ -1,4 +1,8 @@
 package com.flamingo.qa.dto.response;
 
-public record AuthResponse(String token, String reason) {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record AuthResponse(
+        @JsonProperty("token") String token,
+        @JsonProperty("reason") String reason) {
 }
