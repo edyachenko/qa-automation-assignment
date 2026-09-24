@@ -1,5 +1,6 @@
 package com.flamingo.qa.tests;
 
+import com.flamingo.qa.api.AdminToken;
 import com.flamingo.qa.api.AuthClient;
 import com.flamingo.qa.api.BookingClient;
 import org.junit.jupiter.api.AfterEach;
@@ -12,12 +13,14 @@ public abstract class BaseApiTest {
     protected final BookingClient bookingClient = new BookingClient();
 
     protected BookingClient asAdmin() {
-        return bookingClient.withToken(authClient.adminToken());
+        return bookingClient.withToken(AdminToken.INSTANCE.getValue());
     }
 
     @AfterEach
     void deleteCreatedBookings() {
-        BookingClient admin = asAdmin();
-        bookingClient.createdBookingIds().forEach(admin::deleteBooking);
+        if (!bookingClient.createdBookingIds().isEmpty()) {
+            BookingClient admin = asAdmin();
+            bookingClient.createdBookingIds().forEach(admin::deleteBooking);
+        }
     }
 }

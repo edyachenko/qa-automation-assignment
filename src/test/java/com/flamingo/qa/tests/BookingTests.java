@@ -1,14 +1,22 @@
 package com.flamingo.qa.tests;
 
 import com.flamingo.qa.data.BookingData;
+import com.flamingo.qa.data.RequiredBookingField;
 import com.flamingo.qa.dto.BookingDates;
 import com.flamingo.qa.dto.request.BookingRequest;
 import com.flamingo.qa.extension.BookingDataExtension;
 import com.flamingo.qa.extension.ExistingBooking;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.stream.Stream;
 
 import static org.apache.http.HttpStatus.*;
 
@@ -29,10 +37,11 @@ class BookingTests extends BaseApiTest {
                     .shouldHaveBooking(booking);
         }
 
-        @Test
-        @DisplayName("answers 500 for a booking without a first name")
-        void answersServerErrorForBookingWithoutFirstname() {
-            bookingClient.createBooking(BookingData.withoutFirstname())
+        //another usage example of parameterized test
+        @ParameterizedTest(name = "answers 500 for a booking without {0}")
+        @EnumSource(RequiredBookingField.class)
+        void answersServerErrorWithoutRequiredField(RequiredBookingField field) {
+            bookingClient.createBooking(field.removeFrom(BookingData.random()))
                     .shouldHaveStatus(SC_INTERNAL_SERVER_ERROR);
         }
 
@@ -110,16 +119,45 @@ class BookingTests extends BaseApiTest {
                     .shouldContainOnly(booking.id());
         }
 
-        @Test
-        @DisplayName("rejects dates where check-out is before check-in and changes nothing")
+        static Stream<Named<BookingDates>> invalidDates() {
+            return Stream.of(
+                    Named.of("check-out before check-in", dates("2027-03-15", "2027-03-10")),
+                    Named.of("check-out on the check-in day", dates("2027-03-10", "2027-03-10")),
+                    Named.of("dates in the past", dates("2001-01-01", "2001-01-05")),
+                    Named.of("dates not in ISO format", dates("10/03/2027", "15/03/2027")));
+        }
+
+        //another usage example of parameterized test
+        @ParameterizedTest(name = "rejects {0} and changes nothing")
+        @MethodSource("invalidDates")
         @ExtendWith(BookingDataExtension.class)
-        void rejectsSwappedDates(ExistingBooking booking) {
-            asAdmin().updateBooking(booking.id(), BookingData.withSwappedDates(booking.request()))
+        void rejectsInvalidDates(BookingDates invalidDates, ExistingBooking booking) {
+            asAdmin().updateBooking(booking.id(), booking.request().withBookingdates(invalidDates))
                     .shouldHaveStatus(SC_BAD_REQUEST);
 
             bookingClient.getBooking(booking.id())
                     .shouldHaveStatus(SC_OK)
                     .shouldHaveBooking(booking.request());
+        }
+
+        //another usage example of parameterized test
+        @ParameterizedTest(name = "is forbidden with an invalid token \"{0}\" and changes nothing")
+        @ValueSource(strings = {"not-a-real-token", "", "   ", "abc123def456789"})
+        @ExtendWith(BookingDataExtension.class)
+        void isForbiddenWithInvalidToken(String invalidToken, ExistingBooking booking, BookingRequest changed) {
+            bookingClient.withToken(invalidToken).updateBooking(booking.id(), changed)
+                    .shouldHaveStatus(SC_FORBIDDEN);
+
+            bookingClient.getBooking(booking.id())
+                    .shouldHaveStatus(SC_OK)
+                    .shouldHaveBooking(booking.request());
+        }
+
+        private static BookingDates dates(String checkin, String checkout) {
+            return BookingDates.builder()
+                    .checkin(checkin)
+                    .checkout(checkout)
+                    .build();
         }
 
         @Test

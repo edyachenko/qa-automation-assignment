@@ -25,7 +25,7 @@ public class Config {
 
     private String get(String key) {
         String value = System.getProperty(key, PROPERTIES.getProperty(key));
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             throw new IllegalStateException("Missing config value: " + key);
         }
         return value;

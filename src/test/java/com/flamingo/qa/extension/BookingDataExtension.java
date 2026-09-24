@@ -1,6 +1,6 @@
 package com.flamingo.qa.extension;
 
-import com.flamingo.qa.api.AuthClient;
+import com.flamingo.qa.api.AdminToken;
 import com.flamingo.qa.api.BookingClient;
 import com.flamingo.qa.data.BookingData;
 import com.flamingo.qa.dto.request.BookingRequest;
@@ -40,7 +40,7 @@ public class BookingDataExtension implements ParameterResolver, AfterEachCallbac
     public void afterEach(ExtensionContext context) {
         BookingClient client = context.getStore(NAMESPACE).get(BookingClient.class, BookingClient.class);
         if (client != null) {
-            BookingClient admin = client.withToken(new AuthClient().adminToken());
+            BookingClient admin = client.withToken(AdminToken.INSTANCE.getValue());
             client.createdBookingIds().forEach(admin::deleteBooking);
         }
     }
