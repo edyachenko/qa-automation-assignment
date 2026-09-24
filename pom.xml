@@ -19,6 +19,7 @@
     <logback.version>1.5.6</logback.version>
     <allure.version>2.29.1</allure.version>
     <aspectj.version>1.9.22</aspectj.version>
+    <graphql-codegen.version>5.10.0</graphql-codegen.version>
     <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
   </properties>
 
@@ -88,10 +89,51 @@
       <version>${aspectj.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.github.kobylynskyi</groupId>
+      <artifactId>graphql-java-codegen</artifactId>
+      <version>${graphql-codegen.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>2.0.1.Final</version>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>io.github.kobylynskyi</groupId>
+        <artifactId>graphql-codegen-maven-plugin</artifactId>
+        <version>${graphql-codegen.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <graphqlQueryIntrospectionResultPath>${project.basedir}/src/main/graphql/schema.json</graphqlQueryIntrospectionResultPath>
+              <outputDir>${project.build.directory}/generated-sources/graphql</outputDir>
+              <packageName>com.flamingo.qa.graphql.generated</packageName>
+              <generateClient>true</generateClient>
+              <generateApis>false</generateApis>
+              <generateToString>true</generateToString>
+              <generateEqualsAndHashCode>true</generateEqualsAndHashCode>
+              <customTypesMapping>
+                <DateTime>String</DateTime>
+                <Date>String</Date>
+                <Hex>String</Hex>
+                <Long>Long</Long>
+                <RGBAHue>Integer</RGBAHue>
+                <RGBATransparency>Double</RGBATransparency>
+                <Json>Object</Json>
+                <RichTextAST>Object</RichTextAST>
+              </customTypesMapping>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
