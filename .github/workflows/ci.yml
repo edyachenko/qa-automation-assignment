@@ -23,6 +23,9 @@ jobs:
           java-version: '17'
           cache: maven
 
+      - name: Install Playwright Chromium with system dependencies
+        run: mvn -B -q exec:java -Dexec.args="install --with-deps chromium"
+
       - name: Run tests
         env:
           AUTH_USERNAME: ${{ secrets.AUTH_USERNAME }}
