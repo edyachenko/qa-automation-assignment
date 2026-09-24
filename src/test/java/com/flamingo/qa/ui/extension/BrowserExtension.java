@@ -8,10 +8,13 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
+import io.qameta.allure.Allure;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+
+import java.io.ByteArrayInputStream;
 
 @Slf4j
 public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
@@ -37,7 +40,13 @@ public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
 
     @Override
     public void afterEach(ExtensionContext context) {
-        page(context).context().close();
+        Page page = page(context);
+        if (context.getExecutionException().isPresent()) {
+            log.info("Test failed on {}, taking a screenshot", page.url());
+            Allure.addAttachment("Screenshot on failure", "image/png",
+                    new ByteArrayInputStream(page.screenshot(new Page.ScreenshotOptions().setFullPage(true))), ".png");
+        }
+        page.context().close();
     }
 
     private Browser threadBrowser(ExtensionContext context) {
