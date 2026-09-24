@@ -37,7 +37,7 @@ public class GraphQLTests  extends BaseGraphql{
      */
 
     @Nested
-    @DisplayName("GraphQL: query movies")
+    @DisplayName("query movies")
     class Movies {
 
         @Test
@@ -86,7 +86,7 @@ public class GraphQLTests  extends BaseGraphql{
     }
 
     @Nested
-    @DisplayName("GraphQL: query movie by id")
+    @DisplayName("query movie by id")
     class MovieById {
 
         @Test
@@ -113,7 +113,7 @@ public class GraphQLTests  extends BaseGraphql{
     }
 
     @Nested
-    @DisplayName("GraphQL: variables validation")
+    @DisplayName("variables validation")
     class VariablesValidation {
 
         @Test
@@ -136,7 +136,7 @@ public class GraphQLTests  extends BaseGraphql{
     }
 
     @Nested
-    @DisplayName("GraphQL: invalid queries")
+    @DisplayName("invalid queries")
     class InvalidQueries {
 
         @Test
@@ -159,7 +159,7 @@ public class GraphQLTests  extends BaseGraphql{
     }
 
     @Nested
-    @DisplayName("GraphQL: query language features")
+    @DisplayName("query language features")
     class QueryLanguageFeatures {
 
         @Test

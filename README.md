@@ -96,7 +96,8 @@ GitHub Actions (`.github/workflows/ci.yml`), дві job:
 ## Звітність
 
 - Allure: кроки, request/response як attachments, лог тесту, дашборд з env-інфою (REST URL, GraphQL URL, сервіси, юзер)
-- GraphQL: у кожному запиті окремі вкладення **GraphQL query** (відформатований багаторядковий запит) і **GraphQL variables** (JSON), кроки з параметрами (`Query movies (first=2, skip=2)`), сьюти згруповані як `GraphQL: query movies`, `GraphQL: invalid queries` тощо
+- Сьюти в Allure дворівневі: `REST: Restful Booker` → `POST /booking`, `PUT /booking/{id}`…; `GraphQL: Hygraph` → `query movies`, `invalid queries`… (`parentSuite` ставиться в `BaseApiTest` / `BaseGraphql`, `suite` — з `@DisplayName` класу чи `@Nested`-групи)
+- GraphQL: у кожному запиті окремі вкладення **GraphQL query** (відформатований багаторядковий запит) і **GraphQL variables** (JSON), кроки з параметрами (`Query movies (first=2, skip=2)`), групи тестів `query movies`, `invalid queries` тощо
 - Кожен HTTP-виклик логується (SLF4J), тіла — на рівні DEBUG
 
 ## Плюси / межі
