@@ -1,107 +1,124 @@
-# QA Automation Assignment — Restful Booker REST + Hygraph GraphQL Tests
+# QA Automation Assignment
 
 [![CI](https://github.com/edyachenko/qa-automation-assignment/actions/workflows/ci.yml/badge.svg)](https://github.com/edyachenko/qa-automation-assignment/actions/workflows/ci.yml)
 
-API-автотести для REST-сервісу [Restful Booker](https://restful-booker.herokuapp.com) і публічного GraphQL API [Hygraph](https://hygraph.com/graphql-playground) (схема Video) на Java 17 / Maven / JUnit 5 / REST Assured, з Allure-звітністю та паралельним запуском.
+Автотести трьох рівнів в одному Maven-проєкті, з Allure-звітом і CI на GitHub Actions.
 
-## Стек
+| Рівень | Що тестуємо | Інструмент |
+|---|---|---|
+| REST | [Restful Booker](https://restful-booker.herokuapp.com) — auth і CRUD бронювань | REST Assured |
+| GraphQL | [Hygraph](https://hygraph.com/graphql-playground), схема Video — `movies`, `movie` | REST Assured + graphql-java-codegen |
+| UI | [DemoQA Practice Form](https://demoqa.com/automation-practice-form) — реєстрація студента | Playwright |
 
-Java 17 · Maven · JUnit 5 · REST Assured · AssertJ · Jackson · Lombok · graphql-java-codegen · graphql-java (форматування запитів для Allure) · Allure 2 (+ AspectJ weaving) · SLF4J/Logback
+**Звіт останнього прогону:** https://edyachenko.github.io/qa-automation-assignment/
+
+**Стек:** Java 17 · Maven · JUnit 5 · AssertJ · Jackson · Lombok · Allure 2 · SLF4J/Logback
 
 ## Запуск
 
-```bash
-mvn clean test -Dauth.username=admin -Dauth.password=password123
-mvn test -Dgroups=graphql   # тільки GraphQL, креденшели не потрібні
-mvn test -Dgroups=api       # тільки REST
-mvn allure:report   # або allure:serve
-```
-
-Паралельно (4 потоки за замовчуванням, `src/test/resources/junit-platform.properties`).
-
-Потрібен JDK 17: на новіших JDK Lombok 1.18.38 падає на компіляції. Якщо `mvn -version` показує інший JDK:
+Потрібен **JDK 17**: на новіших версіях Lombok падає на компіляції.
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)   # macOS, якщо mvn бере інший JDK
 ```
-
-`@Step`-кроки в Allure пишуться тільки при запуску через Maven (AspectJ-агент підключається в surefire). При запуску з IDE агент треба додати в Run Configuration: `-javaagent:<шлях до aspectjweaver.jar>`.
-
-## Що покрито
-
-### REST (Restful Booker)
-
-- `POST /auth` — валідні/невалідні креденшели
-- `POST /booking` — створення, обов'язкові поля (`@EnumSource`), дублікати
-- `GET /booking`, `GET /booking/{id}` — пошук за іменем/датами, 404
-- `PUT /booking/{id}` — заміна, невалідні дати (`@MethodSource`), невалідний/відсутній токен (`@ValueSource`)
-- `PATCH /booking/{id}` — часткове оновлення + перевірка через повторний GET
-- `DELETE /booking/{id}` — з токеном і без
-
-Кілька негативних тестів навмисно фіксують реальні дефекти сервіса (500 замість 400, приймання невалідних дат) — вони описані в Allure-звіті категорією **Product defects**.
-
-### GraphQL (Hygraph, схема Video)
-
-- список `movies` з лімітом (`first`) і пагінацією (`skip`), через GraphQL variables
-- один `movie` по id: існуючий і неіснуючий (HTTP 200, `movie: null`, без `errors`)
-- вкладені поля через інший тип: `movie → publishedBy → name`
-- битий синтаксис (HTTP 400, `ParseError`, `data: null`)
-- неіснуюче поле (HTTP 400, помилка валідації з назвою поля, `data: null`)
-- валідація variables: відсутня обов'язкова змінна і змінна не того типу (HTTP 400, помилка з назвою змінної)
-- аліаси: одне поле двічі з різними аргументами під власними іменами в одному запиті
-- introspection увімкнена на публічному endpoint (на ній тримається codegen: якщо її вимкнуть, тест це покаже)
-
-## Підходи й патерни
-
-| Підхід | Де |
-|---|---|
-| **Fluent response assertions** | `ResponseAssert<SELF>` (self-typed generic) → `.shouldHaveStatus().shouldHaveBooking()` |
-| **Client / Service layer** | `ApiClient` → `AuthClient`, `BookingClient` |
-| **DTO для request/response** | окремі record'и з `@JsonProperty` |
-| **Object Mother / Builder** | `BookingData`, Lombok `@Builder`/`@With` |
-| **Singleton (enum) + lazy init** | `AdminToken` — токен один раз на прогін, потокобезпечно |
-| **Chain of Responsibility** | REST Assured фільтри: логування + Allure |
-| **JUnit `ParameterResolver`** | `BookingDataExtension`, `AuthDataExtension` — дані прокидуються в параметри тесту |
-| **Data-driven тести** | `@ValueSource`, `@EnumSource`, `@MethodSource` |
-| **`@Step`-анотації** | кроки в Allure-звіті на клієнтах і асертах, з контекстом запиту (не тільки id) |
-| **Codegen зі схеми** | `graphql-codegen-maven-plugin` генерує з `src/main/graphql/schema.json` DTO (`Movie`, `User`), обгортки відповіді (`MoviesQueryResponse`) і проєкції полів (`MovieResponseProjection`) — поля в запиті й DTO мають одне джерело, помилка в назві поля ловиться на компіляції |
-| **GraphQL variables** | операції — шаблони з `$first`/`$skip`/`$id` у `GraphQLClient`, значення йдуть окремим полем `variables`, у текст запиту не вшиваються |
-| **Fluent assertions для GraphQL** | `GraphQlResponseAssert<SELF, R>` — спільні перевірки `data`/`errors`, підкласи під форму відповіді; `satisfies(...)` для разових перевірок без роздування асерт-класів |
-
-### GraphQL: схема і codegen
-
-Згенеровані класи лежать у `target/generated-sources/graphql` і створюються на кожній збірці, в git їх немає. В IntelliJ після клону або змін у `pom.xml`: Maven → Reload All Maven Projects → Generate Sources and Update Folders, інакше IDE не бачить згенерованих класів. У git лежить тільки схема. Оновити її після змін на стороні Hygraph:
 
 ```bash
-python3 scripts/fetch_graphql_schema.py https://us-east-1-shared-usea1-02.cdn.hygraph.com/content/clpvcopq3aavs01usft1idkgj/master src/main/graphql/schema.json
+mvn clean test -Dauth.username=admin -Dauth.password=password123   # усе
+
+mvn test -Dgroups=api -Dauth.username=admin -Dauth.password=password123
+mvn test -Dgroups=graphql
+mvn test -Dgroups=ui
+mvn test -Dgroups=ui -Dui.headless=false   # з видимим браузером
+
+mvn allure:serve   # відкрити звіт локально
 ```
 
-Скрипт робить introspection і лишає тільки типи, досяжні з `Query` (мутації на публічному read-only endpoint не потрібні). Якщо Hygraph перейменує чи видалить поле, яке використовують тести, збірка впаде на компіляції.
+- Креденшели потрібні тільки REST-тестам. Їх передають через `-D`, у репо їх немає.
+- Під час першого UI-прогону Playwright сам скачує Chromium, це близько 150 MB.
+- Тести йдуть паралельно в 4 потоки (`src/test/resources/junit-platform.properties`).
+- Конфіг: `src/main/resources/config.properties`. Будь-яке значення з нього можна перебити через `-Dключ=значення`.
 
-Нова GraphQL-операція = шаблон з variables у `GraphQLClient` + record для variables + асерт-клас під форму відповіді (або існуючий, якщо форма та сама).
+**IntelliJ:**
+- Якщо IDE не бачить класів із `...graphql.generated`: Maven → Reload All Maven Projects → Generate Sources and Update Folders.
+- Allure-кроки (`@Step`) пишуться тільки при запуску через Maven, бо AspectJ-агент підключається в surefire.
+
+## Структура
+
+```
+src/main/java/com/flamingo/qa/
+├── common/    ApiClient (базовий HTTP-клієнт), ResponseAssert, HttpLoggingFilter
+├── config/    Config, TestTag
+├── api/       REST: client, assertions, dto, data (генерація тестових даних)
+├── graphql/   GraphQL: client, assertions, dto, report (вкладення для Allure)
+└── ui/        UI: pages (page objects), dto, data, browser (блокування реклами)
+src/main/graphql/schema.json      схема Hygraph для codegen
+src/test/java/com/flamingo/qa/
+├── tests/     api, graphql, ui — самі тести і базові класи
+├── api/extension, ui/extension   JUnit-extensions
+└── report/    Allure: дашборд і лог тесту у звіті
+```
+
+## Як влаштовано
+
+### Спільне для всіх рівнів
+
+- **Тест читається як сценарій.** Клієнт або сторінка повертає типізований об'єкт з fluent-перевірками:
+  ```java
+  bookingClient.createBooking(booking).shouldHaveStatus(SC_OK).shouldHaveBooking(booking);
+  ```
+- **DTO — Java records** з Lombok `@Builder`/`@With`. Тестові дані генерують фабрики (`BookingData`, `Students`), а не збирає руками кожен тест.
+- **Базовий клас на кожен рівень** (`BaseApiTest`, `BaseGraphql`, `BaseUiTest`) підключає тег, Allure-extension і верхню групу у звіті.
+
+### REST
+
+- `AuthClient` і `BookingClient` успадковують `ApiClient`: base URL, логування і Allure-фільтр налаштовані один раз.
+- Адмін-токен береться один раз за прогін (`AdminToken`, lazy singleton). Створені тестами бронювання видаляються після кожного тесту.
+- Вхідні дані приходять у параметри тесту через JUnit `ParameterResolver` (`BookingDataExtension`, `AuthDataExtension`). Data-driven кейси зроблені через `@ValueSource`, `@EnumSource` і `@MethodSource`.
+
+### GraphQL
+
+- **Codegen.** Maven-плагін генерує зі `schema.json` DTO (`Movie`), обгортки відповіді (`MoviesQueryResponse`) і проєкції полів (`MovieResponseProjection`). Поля в запиті й DTO мають одне джерело, тож помилка в назві поля падає на компіляції, а не в рантаймі.
+- **Variables.** Операції — це шаблони з `$first`/`$skip`/`$id` у `GraphQLClient`. Значення йдуть окремим полем `variables` і не вшиваються в текст запиту.
+- **Асерти.** `GraphQlResponseAssert` містить спільні перевірки `data`/`errors`, підкласи — перевірки під форму конкретної відповіді. Для разової перевірки є `satisfies(...)`, щоб асерт-класи не роздувались.
+- **Оновити схему**, якщо Hygraph її змінить:
+  ```bash
+  python3 scripts/fetch_graphql_schema.py <graphql.url з config.properties> src/main/graphql/schema.json
+  ```
+
+### UI
+
+- **Page Object.** Селектори й кроки (`@Step`) живуть у сторінці (`PracticeFormPage`, `SubmissionModal`). У тестах немає ні селекторів, ні `new`: достатньо оголосити поле, і `PageObjectsExtension` сам створить сторінку на браузері цього тесту.
+  ```java
+  PracticeFormPage practiceForm;
+
+  practiceForm.open().fill(student).submit().shouldShow(student);
+  ```
+- **Браузер** (`BrowserExtension`). Один Chromium на потік, бо Playwright не потокобезпечний. Кожен тест отримує свій ізольований `BrowserContext` і не бачить cookies та стану інших тестів.
+- **Очікування без `sleep`.** Дії Playwright самі чекають, доки елемент стане видимим і доступним. Перевірки йдуть через `PlaywrightAssertions`, які повторюються до таймауту (10 с). Там, де стан змінюється асинхронно, чекаємо його явно: наприклад, що календар закрився після вибору дати.
+- **Реклама demoqa** блокується на рівні мережі (`AdBlocker`), щоб банери не перекривали кнопки.
+- **Скріншот при падінні** знімається до закриття контексту й додається в Allure як "Screenshot on failure".
+
+## Звіт (Allure)
+
+- **Групи:** `REST: Restful Booker` → `POST /booking`…, `GraphQL: Hygraph` → `query movies`…, `UI: DemoQA` → `Student registration form`.
+- **Кроки з даними:** видно, що саме відправили й перевірили, а не лише "Create booking".
+- **Вкладення:** request/response кожного HTTP-виклику. Для GraphQL ще відформатований запит і variables, для UI — скріншот при падінні. У кожному тесті є його лог.
+- **Дашборд Environment:** URL сервісів і юзер.
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`), дві job:
+`.github/workflows/ci.yml` запускається на push/PR у `main` і вручну.
 
-- **test** — push/PR у `main` або запуск вручну → `mvn test` на JDK 17 → Allure-звіт → `allure-results` і готовий report заливаються як build artifacts, навіть якщо тести впали
-- **publish-report** — тільки на push у `main`: бере `allure-results` з job `test`, генерує звіт і публікує на **GitHub Pages** (живе посилання, не архів для качання)
+1. **test** — ставить Chromium із системними залежностями, запускає `mvn test`, генерує Allure-звіт і зберігає його як artifact, навіть якщо тести впали.
+2. **publish-report** — тільки для `main`: публікує звіт на GitHub Pages.
 
-Креденшели беруться **тільки** з GitHub Secrets (`AUTH_USERNAME`, `AUTH_PASSWORD`) — у самому workflow-файлі їх немає. Додати: **Settings → Secrets and variables → Actions → New repository secret**. Без них REST-тести одразу впадуть з чіткою помилкою (`Missing config value: auth.username`), а не мовчки пройдуть з чимось невідомим. GraphQL-тестам креденшели не потрібні.
+Потрібні секрети репозиторію `AUTH_USERNAME` і `AUTH_PASSWORD` (Settings → Secrets and variables → Actions). Для публікації звіту один раз увімкни Settings → Pages → Source: **GitHub Actions**.
 
-Бейдж може бути червоним — CI навмисно не приховує 6 тестів, що ловлять реальні дефекти сервіса (див. вище); `publish-report` при цьому все одно публікує звіт (`if: always()`), щоб дефекти було видно, а не приховано.
+## Відомі дефекти сервісів
 
-**Один раз перед першим запуском:** Settings → Pages → Build and deployment → Source: **GitHub Actions** (без цього job `publish-report` впаде на кроці деплою). Після цього звіт живе за адресою `https://edyachenko.github.io/qa-automation-assignment/`.
+Бейдж CI червоний навмисно: 6 REST-тестів ловлять реальні дефекти Restful Booker.
+- Сервіс приймає дубль бронювання.
+- `PUT` приймає невалідні дати.
+- Пошук за новими датами не знаходить щойно оновлене бронювання.
 
-## Звітність
-
-- Allure: кроки, request/response як attachments, лог тесту, дашборд з env-інфою (REST URL, GraphQL URL, сервіси, юзер)
-- Сьюти в Allure дворівневі: `REST: Restful Booker` → `POST /booking`, `PUT /booking/{id}`…; `GraphQL: Hygraph` → `query movies`, `invalid queries`… (`parentSuite` ставиться в `BaseApiTest` / `BaseGraphql`, `suite` — з `@DisplayName` класу чи `@Nested`-групи)
-- GraphQL: у кожному запиті окремі вкладення **GraphQL query** (відформатований багаторядковий запит) і **GraphQL variables** (JSON), кроки з параметрами (`Query movies (first=2, skip=2)`), групи тестів `query movies`, `invalid queries` тощо
-- Кожен HTTP-виклик логується (SLF4J), тіла — на рівні DEBUG
-
-## Плюси / межі
-
-**Плюси:** тести читаються як сценарій, легко розширювати (новий ендпоінт = клієнт + DTO + асерт), автоочищення тестових даних, паралельний запуск без flaky, GraphQL-DTO не розходяться зі схемою завдяки codegen.
-
-**Межі:** без JSON-schema-валідації REST-відповідей (поза скоупом), токен не оновлюється всередині прогону, GraphQL покриває тільки читання (публічний endpoint read-only), шаблони операцій з variables пишуться руками.
+Ці тести не вимкнені й не приховані. У звіті вони потрапляють у стандартну категорію Allure **Product defects**.
