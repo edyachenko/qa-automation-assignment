@@ -1,7 +1,7 @@
 package com.flamingo.qa.tests.graphql;
 
 import com.flamingo.qa.config.TestTag;
-import com.flamingo.qa.dto.graphql.ProductsQueryVariables;
+import com.flamingo.qa.graphql.dto.ProductsQueryVariables;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

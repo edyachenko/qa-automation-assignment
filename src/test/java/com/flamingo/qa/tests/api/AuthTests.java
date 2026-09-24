@@ -1,7 +1,7 @@
 package com.flamingo.qa.tests.api;
 
-import com.flamingo.qa.dto.request.AuthRequest;
-import com.flamingo.qa.extension.AuthDataExtension;
+import com.flamingo.qa.api.dto.request.AuthRequest;
+import com.flamingo.qa.api.extension.AuthDataExtension;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

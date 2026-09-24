@@ -1,11 +1,11 @@
 package com.flamingo.qa.tests.api;
 
-import com.flamingo.qa.data.BookingData;
-import com.flamingo.qa.data.RequiredBookingField;
-import com.flamingo.qa.dto.BookingDates;
-import com.flamingo.qa.dto.request.BookingRequest;
-import com.flamingo.qa.extension.BookingDataExtension;
-import com.flamingo.qa.extension.ExistingBooking;
+import com.flamingo.qa.api.data.BookingData;
+import com.flamingo.qa.api.data.RequiredBookingField;
+import com.flamingo.qa.api.dto.BookingDates;
+import com.flamingo.qa.api.dto.request.BookingRequest;
+import com.flamingo.qa.api.extension.BookingDataExtension;
+import com.flamingo.qa.api.extension.ExistingBooking;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;

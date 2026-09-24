@@ -1,8 +1,8 @@
 package com.flamingo.qa.tests.api;
 
-import com.flamingo.qa.api.AdminToken;
-import com.flamingo.qa.api.AuthClient;
-import com.flamingo.qa.api.BookingClient;
+import com.flamingo.qa.api.client.AdminToken;
+import com.flamingo.qa.api.client.AuthClient;
+import com.flamingo.qa.api.client.BookingClient;
 import com.flamingo.qa.config.TestTag;
 import com.flamingo.qa.report.AllureReportExtension;
 import org.junit.jupiter.api.AfterEach;
