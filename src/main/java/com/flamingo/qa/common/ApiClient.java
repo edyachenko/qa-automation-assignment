@@ -12,6 +12,7 @@ public abstract class ApiClient {
     private static final HttpLoggingFilter LOGGING_WITHOUT_BODIES = new HttpLoggingFilter(false);
     private static final AllureRestAssured ALLURE = new AllureRestAssured();
 
+    private final String baseUrl;
     private final HttpLoggingFilter logging;
 
     protected ApiClient() {
@@ -19,12 +20,17 @@ public abstract class ApiClient {
     }
 
     protected ApiClient(boolean logBodies) {
+        this(Config.baseUrl(), logBodies);
+    }
+
+    protected ApiClient(String baseUrl, boolean logBodies) {
+        this.baseUrl = baseUrl;
         this.logging = logBodies ? LOGGING_WITH_BODIES : LOGGING_WITHOUT_BODIES;
     }
 
     protected RequestSpecification request() {
         return RestAssured.given()
-                .baseUri(Config.baseUrl())
+                .baseUri(baseUrl)
                 .contentType(ContentType.JSON)
                 .accept("application/json")
                 .filter(logging)

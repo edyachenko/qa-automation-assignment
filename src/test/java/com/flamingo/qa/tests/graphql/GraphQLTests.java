@@ -1,7 +1,8 @@
 package com.flamingo.qa.tests.graphql;
 
 import com.flamingo.qa.config.TestTag;
-import com.flamingo.qa.graphql.dto.ProductsQueryVariables;
+import com.flamingo.qa.graphql.dto.MoviesQueryVariables;
+import com.flamingo.qa.graphql.generated.Movie;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag(TestTag.Names.GRAPHQL)
@@ -31,68 +34,86 @@ public class GraphQLTests  extends BaseGraphql{
      */
 
     @Test
-    @DisplayName("Products list respects the requested page limit")
-    void queryProductsListRespectsLimit() {
-        graphqlClient.queryProducts(new ProductsQueryVariables(3))
+    @DisplayName("Movies list respects the requested page limit")
+    void queryMoviesListRespectsLimit() {
+        graphqlClient.queryMovies(new MoviesQueryVariables(3))
+                .shouldHaveStatus(SC_OK)
                 .shouldHaveNoErrors()
-                .shouldHaveItemCount(3);
+                .shouldHaveMovieCount(3);
     }
 
     @Test
-    @DisplayName("Querying a product by a non-existent id returns null data without errors")
-    void queryProductByNonExistentIdReturnsNullData() {
-        graphqlClient.queryProductById("non-existent-id")
+    @DisplayName("Querying a movie by a non-existent id returns HTTP 200 with a null movie and no errors")
+    void queryMovieByNonExistentIdReturnsNullMovie() {
+        graphqlClient.queryMovieById("non-existent-id")
+                .shouldHaveStatus(SC_OK)
                 .shouldHaveNoErrors()
-                .shouldHaveNullData();
+                .shouldHaveNoMovie();
     }
 
     @Test
-    @DisplayName("Querying a product by an existing id returns exactly that product")
-    void queryProductByExistingIdReturnsThatProduct() {
-        String existingId = graphqlClient.queryProducts(new ProductsQueryVariables(1))
+    @DisplayName("Querying a movie by an existing id returns exactly that movie")
+    void queryMovieByExistingIdReturnsThatMovie() {
+        String existingId = graphqlClient.queryMovies(new MoviesQueryVariables(1))
                 .shouldHaveNoErrors()
-                .firstProductId();
+                .firstMovieId();
 
-        graphqlClient.queryProductById(existingId)
+        graphqlClient.queryMovieById(existingId)
+                .shouldHaveStatus(SC_OK)
                 .shouldHaveNoErrors()
-                .shouldHaveProductId(existingId);
+                .shouldHaveMovieId(existingId);
     }
 
     @Test
     @DisplayName("Skip variable moves the page forward without overlapping the previous page")
-    void queryProductsWithSkipVariableReturnsNextPage() {
-        List<String> firstPage = graphqlClient.queryProducts(new ProductsQueryVariables(2, 0))
+    void queryMoviesWithSkipVariableReturnsNextPage() {
+        List<String> firstPage = graphqlClient.queryMovies(new MoviesQueryVariables(2, 0))
                 .shouldHaveNoErrors()
-                .productIds();
+                .movieIds();
 
-        graphqlClient.queryProducts(new ProductsQueryVariables(2, 2))
+        graphqlClient.queryMovies(new MoviesQueryVariables(2, 2))
+                .shouldHaveStatus(SC_OK)
                 .shouldHaveNoErrors()
-                .shouldHaveItemCount(2)
-                .shouldNotContainProductIds(firstPage);
+                .shouldHaveMovieCount(2)
+                .shouldNotContainMovieIds(firstPage);
     }
 
     @Test
-    @DisplayName("Product query resolves nested fields of a related type")
-    void queryProductWithNestedRelationReturnsRelatedFields() {
-        graphqlClient.queryProductsWithCategory(new ProductsQueryVariables(3))
+    @DisplayName("Every movie in the list has a non-blank slug")
+    void queryMoviesReturnsSlugOnEveryMovie() {
+        graphqlClient.queryMovies(new MoviesQueryVariables(5))
+                .shouldHaveStatus(SC_OK)
                 .shouldHaveNoErrors()
-                .shouldHaveItemCount(3)
-                .shouldHaveCategoryNameOnEveryProduct();
+                .satisfies(response -> assertThat(response.movies())
+                        .extracting(Movie::getSlug)
+                        .allSatisfy(slug -> assertThat(slug).isNotBlank()));
     }
 
     @Test
-    @DisplayName("Malformed query returns a syntax error and no data")
-    void malformedQueryReturnsSyntaxErrorWithoutData() {
-        graphqlClient.executeRaw("{ products { id ")
-                .shouldHaveErrorContaining("Syntax Error")
+    @DisplayName("Movie query resolves the nested publisher name across the User type")
+    void queryMoviesWithPublisherReturnsNestedPublisherName() {
+        graphqlClient.queryMoviesWithPublisher(new MoviesQueryVariables(3))
+                .shouldHaveStatus(SC_OK)
+                .shouldHaveNoErrors()
+                .shouldHaveMovieCount(3)
+                .shouldHavePublisherNameOnEveryMovie();
+    }
+
+    @Test
+    @DisplayName("Malformed query returns HTTP 400 with a parse error and no data")
+    void malformedQueryReturnsParseErrorWithoutData() {
+        graphqlClient.executeRaw("{ movies { id ")
+                .shouldHaveStatus(SC_BAD_REQUEST)
+                .shouldHaveErrorContaining("ParseError")
                 .shouldHaveNoData();
     }
 
     @Test
-    @DisplayName("Requesting a field missing from the schema returns a validation error naming that field")
+    @DisplayName("Requesting a field missing from the schema returns HTTP 400 with a validation error naming that field")
     void unknownFieldReturnsValidationError() {
-        graphqlClient.executeRaw("{ products { id notExistingField } }")
-                .shouldHaveErrorContaining("notExistingField")
+        graphqlClient.executeRaw("{ movies { id notExistingField } }")
+                .shouldHaveStatus(SC_BAD_REQUEST)
+                .shouldHaveErrorContaining("field 'notExistingField' is not defined in 'Movie'")
                 .shouldHaveNoData();
     }
 }

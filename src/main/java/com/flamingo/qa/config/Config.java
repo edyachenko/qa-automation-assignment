@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.Properties;
 
 @UtilityClass
@@ -15,8 +16,16 @@ public class Config {
         return get("base.url");
     }
 
+    public String graphqlUrl() {
+        return get("graphql.url");
+    }
+
     public String username() {
         return get("auth.username");
+    }
+
+    public Optional<String> usernameIfSet() {
+        return find("auth.username");
     }
 
     public String password() {
@@ -24,11 +33,12 @@ public class Config {
     }
 
     private String get(String key) {
-        String value = System.getProperty(key, PROPERTIES.getProperty(key));
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing config value: " + key);
-        }
-        return value;
+        return find(key).orElseThrow(() -> new IllegalStateException("Missing config value: " + key));
+    }
+
+    private Optional<String> find(String key) {
+        return Optional.ofNullable(System.getProperty(key, PROPERTIES.getProperty(key)))
+                .filter(value -> !value.isBlank());
     }
 
     @SneakyThrows

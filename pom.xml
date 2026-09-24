@@ -120,6 +120,7 @@
               <generateApis>false</generateApis>
               <generateToString>true</generateToString>
               <generateEqualsAndHashCode>true</generateEqualsAndHashCode>
+              <generateParameterizedFieldsResolvers>false</generateParameterizedFieldsResolvers>
               <customTypesMapping>
                 <DateTime>String</DateTime>
                 <Date>String</Date>
