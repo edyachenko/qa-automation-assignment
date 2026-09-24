@@ -30,7 +30,7 @@ public class BookingClient extends ApiClient {
         return List.copyOf(createdBookingIds);
     }
 
-    @Step("Create booking")
+    @Step("Create booking {0}")
     public CreateBookingResponseAssert createBooking(BookingRequest booking) {
         CreateBookingResponseAssert created = new CreateBookingResponseAssert(request().body(booking).post(Endpoints.BOOKINGS));
         if (created.isSuccessful()) {
@@ -60,12 +60,12 @@ public class BookingClient extends ApiClient {
         return new BookingResponseAssert(request().get(Endpoints.BOOKING_BY_ID, id));
     }
 
-    @Step("Update booking {0}")
+    @Step("Update booking {0} with {1}")
     public BookingResponseAssert updateBooking(int id, BookingRequest booking) {
         return new BookingResponseAssert(request().body(booking).put(Endpoints.BOOKING_BY_ID, id));
     }
 
-    @Step("Partially update booking {0}")
+    @Step("Partially update booking {0} with {1}")
     public BookingResponseAssert partialUpdateBooking(int id, PartialBookingRequest changes) {
         return new BookingResponseAssert(request().body(changes).patch(Endpoints.BOOKING_BY_ID, id));
     }

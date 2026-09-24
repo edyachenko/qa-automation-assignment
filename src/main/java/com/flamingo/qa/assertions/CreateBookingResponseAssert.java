@@ -19,7 +19,7 @@ public class CreateBookingResponseAssert extends ResponseAssert<CreateBookingRes
         return this;
     }
 
-    @Step("Should have the created booking")
+    @Step("Should have the created booking {0}")
     public CreateBookingResponseAssert shouldHaveBooking(BookingRequest expected) {
         assertThat(body(CreateBookingResponse.class).booking())
                 .as("created booking")

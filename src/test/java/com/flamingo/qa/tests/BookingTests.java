@@ -38,7 +38,8 @@ class BookingTests extends BaseApiTest {
         }
 
         //another usage example of parameterized test
-        @ParameterizedTest(name = "answers 500 for a booking without {0}")
+        @DisplayName("Creating a booking without")
+        @ParameterizedTest(name = "{0} answers with 500")
         @EnumSource(RequiredBookingField.class)
         void createBookingWithoutRequiredFieldReturnsServerError(RequiredBookingField field) {
             bookingClient.createBooking(field.removeFrom(BookingData.random()))
@@ -128,7 +129,8 @@ class BookingTests extends BaseApiTest {
         }
 
         //another usage example of parameterized test
-        @ParameterizedTest(name = "rejects {0} and changes nothing")
+        @DisplayName("Updating a booking with")
+        @ParameterizedTest(name = "{0} is rejected and changes nothing")
         @MethodSource("invalidDates")
         @ExtendWith(BookingDataExtension.class)
         void updateBookingWithInvalidDatesIsRejected(BookingDates invalidDates, ExistingBooking booking) {
@@ -141,7 +143,8 @@ class BookingTests extends BaseApiTest {
         }
 
         //another usage example of parameterized test
-        @ParameterizedTest(name = "is forbidden with an invalid token \"{0}\" and changes nothing")
+        @DisplayName("Updating a booking with")
+        @ParameterizedTest(name = "an invalid token \"{0}\" is forbidden and changes nothing")
         @ValueSource(strings = {"not-a-real-token", "", "   ", "abc123def456789"})
         @ExtendWith(BookingDataExtension.class)
         void updateBookingWithInvalidTokenIsForbidden(String invalidToken, ExistingBooking booking, BookingRequest changed) {

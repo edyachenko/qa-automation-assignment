@@ -16,7 +16,7 @@ public class BookingResponseAssert extends ResponseAssert<BookingResponseAssert>
         super(response);
     }
 
-    @Step("Should have the expected booking")
+    @Step("Should have the expected booking {0}")
     public BookingResponseAssert shouldHaveBooking(BookingRequest expected) {
         assertThat(body(BookingResponse.class))
                 .as("booking")
@@ -25,7 +25,7 @@ public class BookingResponseAssert extends ResponseAssert<BookingResponseAssert>
         return this;
     }
 
-    @Step("Should have the expected booking ignoring {1}")
+    @Step("Should have the expected booking {0} ignoring {1}")
     public BookingResponseAssert shouldHaveBookingIgnoring(BookingRequest expected, String... ignoredFields) {
         assertThat(body(BookingResponse.class))
                 .as("booking")
