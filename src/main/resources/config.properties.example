@@ -1,4 +1,6 @@
 base.url=https://restful-booker.herokuapp.com
+ui.url=https://demoqa.com
+ui.headless=true
 graphql.url=https://us-east-1-shared-usea1-02.cdn.hygraph.com/content/clpvcopq3aavs01usft1idkgj/master
 auth.username=
 auth.password=

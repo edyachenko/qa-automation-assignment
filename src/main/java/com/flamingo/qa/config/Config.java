@@ -20,6 +20,14 @@ public class Config {
         return get("graphql.url");
     }
 
+    public String uiUrl() {
+        return get("ui.url");
+    }
+
+    public boolean uiHeadless() {
+        return Boolean.parseBoolean(find("ui.headless").orElse("true"));
+    }
+
     public String username() {
         return get("auth.username");
     }

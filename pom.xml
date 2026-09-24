@@ -20,6 +20,7 @@
     <allure.version>2.29.1</allure.version>
     <aspectj.version>1.9.22</aspectj.version>
     <graphql-codegen.version>5.10.0</graphql-codegen.version>
+    <playwright.version>1.63.0</playwright.version>
     <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
   </properties>
 
@@ -93,6 +94,11 @@
       <groupId>io.github.kobylynskyi</groupId>
       <artifactId>graphql-java-codegen</artifactId>
       <version>${graphql-codegen.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.playwright</groupId>
+      <artifactId>playwright</artifactId>
+      <version>${playwright.version}</version>
     </dependency>
     <dependency>
       <groupId>com.graphql-java</groupId>
@@ -177,6 +183,14 @@
           <systemPropertyVariables>
             <allure.results.directory>${allure.results.directory}</allure.results.directory>
           </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.4</version>
+        <configuration>
+          <mainClass>com.microsoft.playwright.CLI</mainClass>
         </configuration>
       </plugin>
       <plugin>
