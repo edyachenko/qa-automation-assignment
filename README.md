@@ -107,16 +107,20 @@ src/test/java/com/flamingo/qa/
 
 ## CI
 
-`.github/workflows/ci.yml` запускається на push/PR у `main` і вручну.
+`.github/workflows/ci.yml` запускається на push/PR у `main` і вручну. Два job-и йдуть паралельно, у кожного свій статус, і перезапустити можна кожен окремо:
 
-1. **test** — ставить Chromium із системними залежностями, запускає `mvn test`, генерує Allure-звіт і зберігає його як artifact, навіть якщо тести впали.
-2. **publish-report** — тільки для `main`: публікує звіт на GitHub Pages.
+| Job | Що запускає | Особливості |
+|---|---|---|
+| **API tests (REST + GraphQL)** | `mvn test -Dgroups=api,graphql` | креди з секретів `AUTH_USERNAME`/`AUTH_PASSWORD` |
+| **UI tests (Playwright)** | `mvn test -Dgroups=ui` | спершу ставить Chromium із системними залежностями, креди не потрібні |
+
+Кожен job зберігає свої `allure-results` і готовий звіт як artifacts, навіть якщо тести впали. **publish-report** (тільки для `main`) зливає результати обох job-ів в один звіт і публікує його на GitHub Pages.
 
 Потрібні секрети репозиторію `AUTH_USERNAME` і `AUTH_PASSWORD` (Settings → Secrets and variables → Actions). Для публікації звіту один раз увімкни Settings → Pages → Source: **GitHub Actions**.
 
 ## Відомі дефекти сервісів
 
-Бейдж CI червоний навмисно: 6 REST-тестів ловлять реальні дефекти Restful Booker.
+Job **API tests** червоний навмисно: 6 REST-тестів ловлять реальні дефекти Restful Booker.
 - Сервіс приймає дубль бронювання.
 - `PUT` приймає невалідні дати.
 - Пошук за новими датами не знаходить щойно оновлене бронювання.
