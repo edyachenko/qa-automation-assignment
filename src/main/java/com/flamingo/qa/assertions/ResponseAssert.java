@@ -1,5 +1,6 @@
 package com.flamingo.qa.assertions;
 
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
 
 import static org.apache.http.HttpStatus.SC_OK;
@@ -13,6 +14,7 @@ public abstract class ResponseAssert<SELF extends ResponseAssert<SELF>> {
         this.response = response;
     }
 
+    @Step("Should have HTTP status {0}")
     public SELF shouldHaveStatus(int expected) {
         assertThat(response.statusCode())
                 .as("HTTP status, response body: %s", response.asString())

@@ -6,7 +6,11 @@
         </encoder>
     </appender>
 
-    <logger name="com.flamingo.qa" level="${log.level:-INFO}"/>
+    <appender name="ALLURE" class="com.flamingo.qa.report.AllureLogAppender"/>
+
+    <logger name="com.flamingo.qa" level="${log.level:-INFO}">
+        <appender-ref ref="ALLURE"/>
+    </logger>
 
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>

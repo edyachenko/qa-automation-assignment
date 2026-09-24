@@ -6,6 +6,7 @@ import com.flamingo.qa.assertions.CreateBookingResponseAssert;
 import com.flamingo.qa.assertions.StatusResponseAssert;
 import com.flamingo.qa.dto.request.BookingRequest;
 import com.flamingo.qa.dto.request.PartialBookingRequest;
+import io.qameta.allure.Step;
 import io.restassured.specification.RequestSpecification;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ public class BookingClient extends ApiClient {
         return List.copyOf(createdBookingIds);
     }
 
+    @Step("Create booking")
     public CreateBookingResponseAssert createBooking(BookingRequest booking) {
         CreateBookingResponseAssert created = new CreateBookingResponseAssert(request().body(booking).post(Endpoints.BOOKINGS));
         if (created.isSuccessful()) {
@@ -37,6 +39,7 @@ public class BookingClient extends ApiClient {
         return created;
     }
 
+    @Step("Search bookings by name: {0} {1}")
     public BookingIdsResponseAssert searchBookings(String firstname, String lastname) {
         return new BookingIdsResponseAssert(request()
                 .queryParam("firstname", firstname)
@@ -44,6 +47,7 @@ public class BookingClient extends ApiClient {
                 .get(Endpoints.BOOKINGS));
     }
 
+    @Step("Search bookings by dates: {0} - {1}")
     public BookingIdsResponseAssert searchBookingsByDates(String checkin, String checkout) {
         return new BookingIdsResponseAssert(request()
                 .queryParam("checkin", checkin)
@@ -51,18 +55,22 @@ public class BookingClient extends ApiClient {
                 .get(Endpoints.BOOKINGS));
     }
 
+    @Step("Get booking {0}")
     public BookingResponseAssert getBooking(int id) {
         return new BookingResponseAssert(request().get(Endpoints.BOOKING_BY_ID, id));
     }
 
+    @Step("Update booking {0}")
     public BookingResponseAssert updateBooking(int id, BookingRequest booking) {
         return new BookingResponseAssert(request().body(booking).put(Endpoints.BOOKING_BY_ID, id));
     }
 
+    @Step("Partially update booking {0}")
     public BookingResponseAssert partialUpdateBooking(int id, PartialBookingRequest changes) {
         return new BookingResponseAssert(request().body(changes).patch(Endpoints.BOOKING_BY_ID, id));
     }
 
+    @Step("Delete booking {0}")
     public StatusResponseAssert deleteBooking(int id) {
         return new StatusResponseAssert(request().delete(Endpoints.BOOKING_BY_ID, id));
     }

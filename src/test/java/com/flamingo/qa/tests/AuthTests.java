@@ -14,7 +14,7 @@ class AuthTests extends BaseApiTest {
     @Test
     @DisplayName("returns a token for valid credentials")
     @ExtendWith(AuthDataExtension.class)
-    void returnsTokenForValidCredentials(AuthRequest credentials) {
+    void validCredentialsReturnToken(AuthRequest credentials) {
         authClient.createToken(credentials)
                 .shouldHaveStatus(SC_OK)
                 .shouldHaveToken();
@@ -23,7 +23,7 @@ class AuthTests extends BaseApiTest {
     @Test
     @DisplayName("returns 'Bad credentials' and no token for a wrong password")
     @ExtendWith(AuthDataExtension.class)
-    void returnsBadCredentialsForWrongPassword(AuthRequest credentials) {
+    void wrongPasswordReturnsBadCredentialsWithoutToken(AuthRequest credentials) {
         authClient.createToken(credentials.withPassword("wrong-password"))
                 .shouldHaveStatus(SC_OK)
                 .shouldNotHaveToken()
