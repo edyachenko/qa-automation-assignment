@@ -9,7 +9,8 @@ import lombok.experimental.UtilityClass;
 public enum TestTag {
 
     API(Names.API),
-    GRAPHQL(Names.GRAPHQL);
+    GRAPHQL(Names.GRAPHQL),
+    UI(Names.UI);
 
     private final String value;
 
@@ -18,5 +19,6 @@ public enum TestTag {
 
         public final String API = "api";
         public final String GRAPHQL = "graphql";
+        public final String UI = "ui";
     }
 }
