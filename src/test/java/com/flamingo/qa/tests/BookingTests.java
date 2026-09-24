@@ -20,6 +20,13 @@ import java.util.stream.Stream;
 
 import static org.apache.http.HttpStatus.*;
 
+/*
+   Notes for reviewers:
+   - different approaches for parameterized tests are presented in order to describe flexibility of different methods
+   - JUnit5 extensions are used to show how can we wrap input data for tests
+   - Nested classes used to separate the CRUD methods though it can be also done through different test classes
+   - All comments added in this project only for informational purposes and will not be used in real projects
+ */
 @DisplayName("Bookings")
 class BookingTests extends BaseApiTest {
 
@@ -37,7 +44,6 @@ class BookingTests extends BaseApiTest {
                     .shouldHaveBooking(booking);
         }
 
-        //another usage example of parameterized test
         @DisplayName("Creating a booking without")
         @ParameterizedTest(name = "{0} answers with 500")
         @EnumSource(RequiredBookingField.class)
@@ -121,6 +127,7 @@ class BookingTests extends BaseApiTest {
         }
 
         static Stream<Named<BookingDates>> invalidDates() {
+            //in real projects dates can be added via DateUtils depending on current date.
             return Stream.of(
                     Named.of("check-out before check-in", dates("2027-03-15", "2027-03-10")),
                     Named.of("check-out on the check-in day", dates("2027-03-10", "2027-03-10")),
