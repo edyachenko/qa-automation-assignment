@@ -1,6 +1,7 @@
 package com.flamingo.qa.tests.graphql;
 
 import com.flamingo.qa.config.TestTag;
+import com.flamingo.qa.dto.graphql.ProductsQueryVariables;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -28,8 +29,6 @@ public class GraphQLTests  extends BaseGraphql{
         Requesting a non-existent field — assert validation error.
 
      */
-
-    private final GraphQLClient graphqlClient = new GraphQLClient();
 
     @Test
     @DisplayName("Products list respects the requested page limit")
