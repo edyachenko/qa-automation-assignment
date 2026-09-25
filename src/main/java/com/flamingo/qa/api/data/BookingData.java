@@ -33,18 +33,6 @@ public class BookingData {
                 .build();
     }
 
-    public BookingRequest withSwappedDates(BookingRequest booking) {
-        BookingDates dates = booking.bookingdates();
-        return booking.withBookingdates(BookingDates.builder()
-                .checkin(dates.checkout())
-                .checkout(dates.checkin())
-                .build());
-    }
-
-    public BookingRequest withoutFirstname() {
-        return random().withFirstname(null);
-    }
-
     public PartialBookingRequest datesOnly(BookingDates dates) {
         return PartialBookingRequest.builder()
                 .bookingdates(dates)

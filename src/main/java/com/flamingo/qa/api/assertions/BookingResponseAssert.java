@@ -50,10 +50,4 @@ public class BookingResponseAssert extends ResponseAssert<BookingResponseAssert>
                 .isAfter(LocalDate.parse(dates.checkin()));
         return this;
     }
-
-    @Step("Should have firstname {0}")
-    public BookingResponseAssert shouldHaveFirstname(String expected) {
-        assertThat(body(BookingResponse.class).firstname()).as("firstname").isEqualTo(expected);
-        return this;
-    }
 }
