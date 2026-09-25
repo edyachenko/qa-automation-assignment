@@ -16,14 +16,14 @@ import io.restassured.response.Response;
 
 import java.util.Map;
 
-public class GraphQLClient extends ApiClient {
+public class GraphQlClient extends ApiClient {
 
     private static final String MOVIES =
             "query Movies($first: Int, $skip: Int) { movies(first: $first, skip: $skip, orderBy: createdAt_ASC) %s }";
     private static final String MOVIE_BY_ID =
             "query Movie($id: ID!) { movie(where: {id: $id}) %s }";
 
-    public GraphQLClient() {
+    public GraphQlClient() {
         super(Config.graphqlUrl(), true);
     }
 

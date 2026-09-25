@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag(TestTag.Names.GRAPHQL)
 @Feature("GraphQL queries")
 @DisplayName("GraphQL: Hygraph movies")
-public class GraphQLTests  extends BaseGraphql{
+public class GraphQlTests  extends BaseGraphQlTest{
 
 
     /*
