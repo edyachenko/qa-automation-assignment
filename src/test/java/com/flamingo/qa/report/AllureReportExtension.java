@@ -4,15 +4,20 @@ import com.flamingo.qa.config.Config;
 import io.qameta.allure.Allure;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.commons.support.AnnotationSupport;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AllureReportExtension implements BeforeAllCallback, AfterEachCallback {
+import static io.qameta.allure.util.ResultsUtils.PARENT_SUITE_LABEL_NAME;
+
+public class AllureReportExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
 
     private static final AtomicBoolean ENVIRONMENT_WRITTEN = new AtomicBoolean(false);
 
@@ -21,6 +26,15 @@ public class AllureReportExtension implements BeforeAllCallback, AfterEachCallba
         if (ENVIRONMENT_WRITTEN.compareAndSet(false, true)) {
             writeEnvironment();
         }
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) {
+        context.getRequiredTestInstances().getAllInstances().stream()
+                .map(instance -> AnnotationSupport.findAnnotation(instance.getClass(), ParentSuite.class))
+                .flatMap(Optional::stream)
+                .findFirst()
+                .ifPresent(parentSuite -> Allure.label(PARENT_SUITE_LABEL_NAME, parentSuite.value()));
     }
 
     @Override
