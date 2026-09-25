@@ -69,13 +69,12 @@ class BookingTests extends BaseApiTest {
     class Get {
 
         @Test
-        @DisplayName("returns an existing booking")
+        @DisplayName("returns an existing booking with every field and valid dates")
         @ExtendWith(BookingDataExtension.class)
         void getExistingBookingReturnsIt(ExistingBooking booking) {
             bookingClient.getBooking(booking.id())
                     .shouldHaveStatus(SC_OK)
-                    .shouldHaveBooking(booking.request())
-                    .shouldHaveCheckoutAfterCheckin();
+                    .shouldHaveEveryField(booking.request());
         }
 
         @Test

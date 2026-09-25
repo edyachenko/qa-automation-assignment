@@ -73,6 +73,7 @@ src/test/java/com/flamingo/qa/
 
 - `AuthClient` і `BookingClient` успадковують `ApiClient`: base URL, логування і Allure-фільтр налаштовані один раз.
 - Адмін-токен береться один раз за прогін (`AdminToken`, lazy singleton). Створені тестами бронювання видаляються після кожного тесту.
+- `shouldHaveEveryField` перевіряє кожне поле бронювання і правило "виїзд після заїзду" через AssertJ soft assertions: при падінні видно всі розбіжності одразу, а не лише першу.
 - Вхідні дані приходять у параметри тесту через JUnit `ParameterResolver` (`BookingDataExtension`, `AuthDataExtension`). Data-driven кейси зроблені через `@ValueSource`, `@EnumSource` і `@MethodSource`.
 
 ### GraphQL

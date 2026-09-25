@@ -6,6 +6,7 @@ import com.flamingo.qa.api.dto.request.BookingRequest;
 import com.flamingo.qa.api.dto.response.BookingResponse;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
+import org.assertj.core.api.SoftAssertions;
 
 import java.time.LocalDate;
 
@@ -42,12 +43,20 @@ public class BookingResponseAssert extends ResponseAssert<BookingResponseAssert>
         return this;
     }
 
-    @Step("Should have check-out after check-in")
-    public BookingResponseAssert shouldHaveCheckoutAfterCheckin() {
-        BookingDates dates = body(BookingResponse.class).bookingdates();
-        assertThat(LocalDate.parse(dates.checkout()))
-                .as("checkout %s must be after checkin %s", dates.checkout(), dates.checkin())
-                .isAfter(LocalDate.parse(dates.checkin()));
+    @Step("Should have every field of {0} and check-out after check-in")
+    public BookingResponseAssert shouldHaveEveryField(BookingRequest expected) {
+        BookingResponse actual = body(BookingResponse.class);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(actual.firstname()).as("firstname").isEqualTo(expected.firstname());
+            softly.assertThat(actual.lastname()).as("lastname").isEqualTo(expected.lastname());
+            softly.assertThat(actual.totalprice()).as("totalprice").isEqualTo(expected.totalprice()).isPositive();
+            softly.assertThat(actual.depositpaid()).as("depositpaid").isEqualTo(expected.depositpaid());
+            softly.assertThat(actual.bookingdates()).as("bookingdates").isEqualTo(expected.bookingdates());
+            softly.assertThat(actual.additionalneeds()).as("additionalneeds").isEqualTo(expected.additionalneeds());
+            softly.assertThat(LocalDate.parse(actual.bookingdates().checkout()))
+                    .as("checkout %s must be after checkin %s", actual.bookingdates().checkout(), actual.bookingdates().checkin())
+                    .isAfter(LocalDate.parse(actual.bookingdates().checkin()));
+        });
         return this;
     }
 }
