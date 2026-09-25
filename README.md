@@ -23,9 +23,13 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)   # macOS, якщо mvn бер�
 ```
 
 ```bash
-mvn clean test -Dauth.username=admin -Dauth.password=password123   # усе
+export AUTH_USERNAME=<логін Restful Booker>
+export AUTH_PASSWORD=<пароль Restful Booker>
 
-mvn test -Dgroups=api -Dauth.username=admin -Dauth.password=password123
+mvn clean test -Dauth.username="$AUTH_USERNAME" -Dauth.password="$AUTH_PASSWORD"   # усе
+
+mvn test -Dgroups=api -Dauth.username="$AUTH_USERNAME" -Dauth.password="$AUTH_PASSWORD"
+mvn test -Dgroups=api -DexcludedGroups=known-defect -Dauth.username="$AUTH_USERNAME" -Dauth.password="$AUTH_PASSWORD"   # без відомих дефектів
 mvn test -Dgroups=graphql
 mvn test -Dgroups=ui
 mvn test -Dgroups=ui -Dui.headless=false   # з видимим браузером
@@ -33,14 +37,10 @@ mvn test -Dgroups=ui -Dui.headless=false   # з видимим браузеро�
 mvn allure:serve   # відкрити звіт локально
 ```
 
-- Креденшели потрібні тільки REST-тестам. Їх передають через `-D`, у репо їх немає.
+- Креденшели потрібні тільки REST-тестам. Їх передають через `-D`: у репо їх немає, і комітити їх не можна.
 - Під час першого UI-прогону Playwright сам скачує Chromium, це близько 150 MB.
 - Тести йдуть паралельно в 4 потоки (`src/test/resources/junit-platform.properties`).
 - Конфіг: `src/main/resources/config.properties`. Будь-яке значення з нього можна перебити через `-Dключ=значення`.
-
-**IntelliJ:**
-- Якщо IDE не бачить класів із `...graphql.generated`: Maven → Reload All Maven Projects → Generate Sources and Update Folders.
-- Allure-кроки (`@Step`) пишуться тільки при запуску через Maven, бо AspectJ-агент підключається в surefire.
 
 ## Структура
 
@@ -50,12 +50,12 @@ src/main/java/com/flamingo/qa/
 ├── config/    Config, TestTag
 ├── api/       REST: client, assertions, dto, data (генерація тестових даних)
 ├── graphql/   GraphQL: client, assertions, dto, report (вкладення для Allure)
-└── ui/        UI: pages (page objects), dto, data, browser (блокування реклами)
+└── ui/        UI: pages (page objects), components (віджети), dto, data, browser (блокування реклами)
 src/main/graphql/schema.json      схема Hygraph для codegen
 src/test/java/com/flamingo/qa/
 ├── tests/     api, graphql, ui — самі тести і базові класи
 ├── api/extension, ui/extension   JUnit-extensions
-└── report/    Allure: дашборд і лог тесту у звіті
+└── report/    Allure: @ParentSuite, дашборд, лог тесту у звіті
 ```
 
 ## Як влаштовано
@@ -67,7 +67,7 @@ src/test/java/com/flamingo/qa/
   bookingClient.createBooking(booking).shouldHaveStatus(SC_OK).shouldHaveBooking(booking);
   ```
 - **DTO — Java records** з Lombok `@Builder`/`@With`. Тестові дані генерують фабрики (`BookingData`, `Students`), а не збирає руками кожен тест.
-- **Базовий клас на кожен рівень** (`BaseApiTest`, `BaseGraphql`, `BaseUiTest`) підключає тег, Allure-extension і верхню групу у звіті.
+- **Базовий клас на кожен рівень** (`BaseApiTest`, `BaseGraphQlTest`, `BaseUiTest`) ставить тег і `@ParentSuite("...")`. Ця анотація підключає Allure-extension і задає верхню групу у звіті.
 
 ### REST
 
@@ -78,7 +78,7 @@ src/test/java/com/flamingo/qa/
 ### GraphQL
 
 - **Codegen.** Maven-плагін генерує зі `schema.json` DTO (`Movie`), обгортки відповіді (`MoviesQueryResponse`) і проєкції полів (`MovieResponseProjection`). Поля в запиті й DTO мають одне джерело, тож помилка в назві поля падає на компіляції, а не в рантаймі.
-- **Variables.** Операції — це шаблони з `$first`/`$skip`/`$id` у `GraphQLClient`. Значення йдуть окремим полем `variables` і не вшиваються в текст запиту.
+- **Variables.** Операції — це шаблони з `$first`/`$skip`/`$id` у `GraphQlClient`. Значення йдуть окремим полем `variables` і не вшиваються в текст запиту.
 - **Асерти.** `GraphQlResponseAssert` містить спільні перевірки `data`/`errors`, підкласи — перевірки під форму конкретної відповіді. Для разової перевірки є `satisfies(...)`, щоб асерт-класи не роздувались.
 - **Оновити схему**, якщо Hygraph її змінить:
   ```bash
@@ -87,7 +87,7 @@ src/test/java/com/flamingo/qa/
 
 ### UI
 
-- **Page Object.** Селектори й кроки (`@Step`) живуть у сторінці (`PracticeFormPage`, `SubmissionModal`). У тестах немає ні селекторів, ні `new`: достатньо оголосити поле, і `PageObjectsExtension` сам створить сторінку на браузері цього тесту.
+- **Page Object.** Селектори й кроки (`@Step`) живуть у сторінці (`PracticeFormPage`, `SubmissionModal`). Логіка складних віджетів винесена в компоненти (`ReactSelect`, `DatePicker`), а сторінка тільки передає їм свій селектор. У тестах немає ні селекторів, ні `new`: достатньо оголосити поле, і `PageObjectsExtension` сам створить сторінку на браузері цього тесту.
   ```java
   PracticeFormPage practiceForm;
 
@@ -96,13 +96,16 @@ src/test/java/com/flamingo/qa/
 - **Браузер** (`BrowserExtension`). Один Chromium на потік, бо Playwright не потокобезпечний. Кожен тест отримує свій ізольований `BrowserContext` і не бачить cookies та стану інших тестів.
 - **Очікування без `sleep`.** Дії Playwright самі чекають, доки елемент стане видимим і доступним. Перевірки йдуть через `PlaywrightAssertions`, які повторюються до таймауту (10 с). Там, де стан змінюється асинхронно, чекаємо його явно: наприклад, що календар закрився після вибору дати.
 - **Реклама demoqa** блокується на рівні мережі (`AdBlocker`), щоб банери не перекривали кнопки.
-- **Скріншот при падінні** знімається до закриття контексту й додається в Allure як "Screenshot on failure".
+- **Скріншот і Playwright trace при падінні** знімаються до закриття контексту й додаються в Allure. Trace відкривається так:
+  ```bash
+  mvn exec:java -Dexec.args="show-trace <скачаний trace.zip>"
+  ```
 
 ## Звіт (Allure)
 
 - **Групи:** `REST: Restful Booker` → `POST /booking`…, `GraphQL: Hygraph` → `query movies`…, `UI: DemoQA` → `Student registration form`.
 - **Кроки з даними:** видно, що саме відправили й перевірили, а не лише "Create booking".
-- **Вкладення:** request/response кожного HTTP-виклику. Для GraphQL ще відформатований запит і variables, для UI — скріншот при падінні. У кожному тесті є його лог.
+- **Вкладення:** request/response кожного HTTP-виклику. Для GraphQL ще відформатований запит і variables, для UI — скріншот і Playwright trace при падінні. У кожному тесті є його лог.
 - **Дашборд Environment:** URL сервісів і юзер.
 
 ## CI
@@ -125,4 +128,4 @@ Job **API tests** червоний навмисно: 6 REST-тестів лов�
 - `PUT` приймає невалідні дати.
 - Пошук за новими датами не знаходить щойно оновлене бронювання.
 
-Ці тести не вимкнені й не приховані. У звіті вони потрапляють у стандартну категорію Allure **Product defects**.
+Ці тести не вимкнені й не приховані. Вони позначені тегом `known-defect`: у звіті їх видно по тегу, а локально їх можна виключити через `-DexcludedGroups=known-defect`. Червоні тести Allure відносить до стандартної категорії **Product defects**.
