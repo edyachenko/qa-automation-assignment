@@ -7,14 +7,19 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.Tracing;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import io.qameta.allure.Allure;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.io.ByteArrayInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 
 @Slf4j
 public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
@@ -34,6 +39,7 @@ public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
                 .setViewportSize(1920, 1080));
         browserContext.setDefaultTimeout(ACTION_TIMEOUT_MS);
         AdBlocker.install(browserContext);
+        browserContext.tracing().start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
         context.getStore(NAMESPACE).put(Page.class, browserContext.newPage());
         log.info("Opened a fresh browser context for {}", context.getDisplayName());
     }
@@ -42,11 +48,21 @@ public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
     public void afterEach(ExtensionContext context) {
         Page page = page(context);
         if (context.getExecutionException().isPresent()) {
-            log.info("Test failed on {}, taking a screenshot", page.url());
+            log.info("Test failed on {}, attaching a screenshot and a Playwright trace", page.url());
             Allure.addAttachment("Screenshot on failure", "image/png",
                     new ByteArrayInputStream(page.screenshot(new Page.ScreenshotOptions().setFullPage(true))), ".png");
+            attachTrace(page);
+        } else {
+            page.context().tracing().stop();
         }
         page.context().close();
+    }
+
+    @SneakyThrows
+    private void attachTrace(Page page) {
+        Path trace = Files.createDirectories(Path.of("target", "playwright-traces")).resolve(UUID.randomUUID() + ".zip");
+        page.context().tracing().stop(new Tracing.StopOptions().setPath(trace));
+        Allure.addAttachment("Playwright trace", "application/zip", Files.newInputStream(trace), ".zip");
     }
 
     private Browser threadBrowser(ExtensionContext context) {
