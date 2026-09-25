@@ -1,5 +1,7 @@
 package com.flamingo.qa.ui.pages.form;
 
+import com.flamingo.qa.ui.components.DatePicker;
+import com.flamingo.qa.ui.components.ReactSelect;
 import com.flamingo.qa.ui.dto.Gender;
 import com.flamingo.qa.ui.dto.Hobby;
 import com.flamingo.qa.ui.dto.Student;
@@ -28,17 +30,15 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
     private final Locator email = page.locator("#userEmail");
     private final Locator genders = page.locator("#genterWrapper");
     private final Locator mobile = page.locator("#userNumber");
-    private final Locator birthDate = page.locator("#dateOfBirthInput");
-    private final Locator calendar = page.locator(".react-datepicker");
-    private final Locator calendarMonth = calendar.locator(".react-datepicker__month-select");
-    private final Locator calendarYear = calendar.locator(".react-datepicker__year-select");
-    private final Locator calendarDays = calendar.locator(".react-datepicker__day:not(.react-datepicker__day--outside-month)");
-    private final Locator subjects = page.locator("#subjectsContainer");
+    private final Locator birthDateInput = page.locator("#dateOfBirthInput");
+    private final DatePicker birthDate = new DatePicker(birthDateInput);
+    private final Locator subjectsField = page.locator("#subjectsContainer");
+    private final ReactSelect subjects = new ReactSelect(subjectsField);
     private final Locator hobbies = page.locator("#hobbiesWrapper");
     private final Locator picture = page.locator("#uploadPicture");
     private final Locator currentAddress = page.locator("#currentAddress");
-    private final Locator state = page.locator("#state");
-    private final Locator city = page.locator("#city");
+    private final ReactSelect state = new ReactSelect(page.locator("#state"));
+    private final ReactSelect city = new ReactSelect(page.locator("#city"));
     private final Locator submitButton = page.locator("#submit");
 
     public PracticeFormPage(Page page) {
@@ -58,7 +58,7 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
         genderOption(student.gender()).check();
         mobile.fill(student.mobile());
         pickBirthDate(student.birthDate());
-        student.subjects().forEach(this::addSubject);
+        student.subjects().forEach(subjects::choose);
         student.hobbies().forEach(hobby -> hobbyOption(hobby).check());
         uploadPicture(student.picture());
         currentAddress.fill(student.currentAddress());
@@ -74,7 +74,7 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
         assertThat(email).hasValue(expected.email());
         assertThat(genderOption(expected.gender())).isChecked();
         assertThat(mobile).hasValue(expected.mobile());
-        expected.subjects().forEach(subject -> assertThat(subjects).containsText(subject));
+        expected.subjects().forEach(subject -> assertThat(subjectsField).containsText(subject));
         expected.hobbies().forEach(hobby -> assertThat(hobbyOption(hobby)).isChecked());
         assertThat(currentAddress).hasValue(expected.currentAddress());
         shouldHaveBirthDate(expected.birthDate());
@@ -96,36 +96,32 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
 
     @Step("Pick birth date {0} in the date picker")
     public PracticeFormPage pickBirthDate(LocalDate date) {
-        birthDate.click();
-        calendarMonth.selectOption(String.valueOf(date.getMonthValue() - 1));
-        calendarYear.selectOption(String.valueOf(date.getYear()));
-        calendarDays.getByText(String.valueOf(date.getDayOfMonth()), new Locator.GetByTextOptions().setExact(true)).click();
-        assertThat(calendar).isHidden();
+        birthDate.pick(date);
         return this;
     }
 
     @Step("Date of birth field should show {0}")
     public PracticeFormPage shouldHaveBirthDate(LocalDate expected) {
-        assertThat(birthDate).hasValue(BIRTH_DATE_FORMAT.format(expected));
+        assertThat(birthDateInput).hasValue(BIRTH_DATE_FORMAT.format(expected));
         return this;
     }
 
     @Step("Select state \"{0}\"")
     public PracticeFormPage selectState(String value) {
-        chooseOption(state, value);
+        state.choose(value);
         return this;
     }
 
     @Step("Select city \"{0}\"")
     public PracticeFormPage selectCity(String value) {
-        chooseOption(city, value);
+        city.choose(value);
         return this;
     }
 
     @Step("State should be \"{0}\" and city \"{1}\"")
     public PracticeFormPage shouldHaveStateAndCity(String expectedState, String expectedCity) {
-        assertThat(selectedValue(state)).hasText(expectedState);
-        assertThat(selectedValue(city)).hasText(expectedCity);
+        assertThat(state.selectedValue()).hasText(expectedState);
+        assertThat(city.selectedValue()).hasText(expectedCity);
         return this;
     }
 
@@ -133,19 +129,6 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
     public SubmissionModal submit() {
         submitButton.click();
         return new SubmissionModal(page).waitUntilVisible();
-    }
-
-    private void addSubject(String subject) {
-        chooseOption(subjects, subject);
-    }
-
-    private void chooseOption(Locator select, String option) {
-        select.locator("input").pressSequentially(option);
-        select.getByRole(AriaRole.OPTION, new Locator.GetByRoleOptions().setName(option).setExact(true)).click();
-    }
-
-    private Locator selectedValue(Locator select) {
-        return select.locator("[class*='singleValue']");
     }
 
     private Locator genderOption(Gender gender) {
