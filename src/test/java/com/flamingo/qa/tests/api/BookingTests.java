@@ -6,9 +6,11 @@ import com.flamingo.qa.api.dto.BookingDates;
 import com.flamingo.qa.api.dto.request.BookingRequest;
 import com.flamingo.qa.api.extension.BookingDataExtension;
 import com.flamingo.qa.api.extension.ExistingBooking;
+import com.flamingo.qa.config.TestTag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,6 +56,7 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("rejects the same booking for the same guest and dates twice")
+        @Tag(TestTag.KNOWN_DEFECT)
         @ExtendWith(BookingDataExtension.class)
         void createDuplicateBookingForSameGuestAndDatesIsRejected(ExistingBooking booking) {
             bookingClient.createBooking(booking.request())
@@ -139,6 +142,7 @@ class BookingTests extends BaseApiTest {
         @DisplayName("Updating a booking with")
         @ParameterizedTest(name = "{0} is rejected and changes nothing")
         @MethodSource("invalidDates")
+        @Tag(TestTag.KNOWN_DEFECT)
         @ExtendWith(BookingDataExtension.class)
         void updateBookingWithInvalidDatesIsRejected(BookingDates invalidDates, ExistingBooking booking) {
             asAdmin().updateBooking(booking.id(), booking.request().withBookingdates(invalidDates))
@@ -189,6 +193,7 @@ class BookingTests extends BaseApiTest {
 
         @Test
         @DisplayName("changes only the dates and finds the booking by the new dates")
+        @Tag(TestTag.KNOWN_DEFECT)
         @ExtendWith(BookingDataExtension.class)
         void partialUpdateChangesOnlyDatesAndIsSearchableByNewDates(ExistingBooking booking) {
             BookingDates newDates = BookingData.randomDates();
