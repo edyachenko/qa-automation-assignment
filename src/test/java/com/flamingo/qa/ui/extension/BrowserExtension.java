@@ -26,6 +26,7 @@ public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
 
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(BrowserExtension.class);
     private static final int ACTION_TIMEOUT_MS = 15_000;
+    private static final int NAVIGATION_TIMEOUT_MS = 45_000;
     private static final int ASSERTION_TIMEOUT_MS = 10_000;
 
     public static Page page(ExtensionContext context) {
@@ -38,6 +39,7 @@ public class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
                 .setBaseURL(Config.uiUrl())
                 .setViewportSize(1920, 1080));
         browserContext.setDefaultTimeout(ACTION_TIMEOUT_MS);
+        browserContext.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
         AdBlocker.install(browserContext);
         browserContext.tracing().start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
         context.getStore(NAMESPACE).put(Page.class, browserContext.newPage());

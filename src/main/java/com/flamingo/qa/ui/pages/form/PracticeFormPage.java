@@ -32,8 +32,7 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
     private final Locator mobile = page.locator("#userNumber");
     private final Locator birthDateInput = page.locator("#dateOfBirthInput");
     private final DatePicker birthDate = new DatePicker(birthDateInput);
-    private final Locator subjectsField = page.locator("#subjectsContainer");
-    private final ReactSelect subjects = new ReactSelect(subjectsField);
+    private final ReactSelect subjects = new ReactSelect(page.locator("#subjectsContainer"));
     private final Locator hobbies = page.locator("#hobbiesWrapper");
     private final Locator picture = page.locator("#uploadPicture");
     private final Locator currentAddress = page.locator("#currentAddress");
@@ -74,7 +73,7 @@ public class PracticeFormPage extends BasePage<PracticeFormPage> {
         assertThat(email).hasValue(expected.email());
         assertThat(genderOption(expected.gender())).isChecked();
         assertThat(mobile).hasValue(expected.mobile());
-        expected.subjects().forEach(subject -> assertThat(subjectsField).containsText(subject));
+        assertThat(subjects.selectedValues()).hasText(expected.subjects().toArray(String[]::new));
         expected.hobbies().forEach(hobby -> assertThat(hobbyOption(hobby)).isChecked());
         assertThat(currentAddress).hasValue(expected.currentAddress());
         shouldHaveBirthDate(expected.birthDate());
