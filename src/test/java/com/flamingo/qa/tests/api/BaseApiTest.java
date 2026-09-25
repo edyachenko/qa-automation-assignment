@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static io.qameta.allure.util.ResultsUtils.PARENT_SUITE_LABEL_NAME;
 
-@Tag(TestTag.Names.API)
+@Tag(TestTag.API)
 @ExtendWith(AllureReportExtension.class)
 public abstract class BaseApiTest {
 

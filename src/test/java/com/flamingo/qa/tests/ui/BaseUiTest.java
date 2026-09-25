@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static io.qameta.allure.util.ResultsUtils.PARENT_SUITE_LABEL_NAME;
 
-@Tag(TestTag.Names.UI)
+@Tag(TestTag.UI)
 @ExtendWith({AllureReportExtension.class, BrowserExtension.class, PageObjectsExtension.class})
 public abstract class BaseUiTest {
 

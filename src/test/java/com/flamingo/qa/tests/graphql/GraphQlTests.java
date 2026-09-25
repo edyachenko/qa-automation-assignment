@@ -16,7 +16,7 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag(TestTag.Names.GRAPHQL)
+@Tag(TestTag.GRAPHQL)
 @Feature("GraphQL queries")
 @DisplayName("GraphQL: Hygraph movies")
 public class GraphQlTests  extends BaseGraphQlTest{
