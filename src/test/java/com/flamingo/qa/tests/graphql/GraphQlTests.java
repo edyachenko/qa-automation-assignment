@@ -19,22 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag(TestTag.GRAPHQL)
 @Feature("GraphQL queries")
 @DisplayName("GraphQL: Hygraph movies")
-public class GraphQlTests  extends BaseGraphQlTest{
-
-
-    /*
-    Video
-    GraphQL Positive
-        Query a list with pagination/limit
-        Query a single entity by ID.
-        A query that uses GraphQL variables (not string interpolation).
-        A query that uses a fragment or nested fields across types (e.g. movie → publishedBy → name)
-    GraphQL Negative
-        Invalid ID (non-existent) — assert response shape (GraphQL typically returns HTTP 200 with data: null or an errors array; verify which).
-        Malformed query (syntax error) — assert errors[].message and absence of data.
-        Requesting a non-existent field — assert validation error.
-
-     */
+public class GraphQlTests extends BaseGraphQlTest {
 
     @Nested
     @DisplayName("query movies")

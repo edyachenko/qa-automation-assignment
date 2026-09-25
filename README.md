@@ -42,6 +42,22 @@ mvn allure:serve   # відкрити звіт локально
 - Тести йдуть паралельно в 4 потоки (`src/test/resources/junit-platform.properties`).
 - Конфіг: `src/main/resources/config.properties`. Будь-яке значення з нього можна перебити через `-Dключ=значення`.
 
+## Середовища
+
+Середовище обирається Maven-профілем: `prod` (за замовчуванням), `stage`, `dev`.
+
+```bash
+mvn clean test -Pstage -Dgroups=ui
+```
+
+- **Профіль** у `pom.xml` задає `env` і URL-и сервісів, surefire передає їх у тести.
+- **Пріоритет значень:** `-D` у командному рядку → профіль → `config.properties`.
+- **`config.properties`** тримає значення prod, тому запуск з IDE без Maven теж працює.
+- **У звіті Allure** середовище видно в дашборді Environment.
+- **На CI** середовище обирається при ручному запуску workflow (Run workflow → env). На push і PR запускається `prod`.
+
+У Restful Booker, Hygraph і DemoQA немає окремих dev і stage, тому профілі `stage` і `dev` зараз ведуть на ті самі публічні URL. Для реального проєкту в них прописуються URL-и відповідних середовищ, а креди — окремими секретами для кожного середовища (GitHub Environments).
+
 ## Структура
 
 ```

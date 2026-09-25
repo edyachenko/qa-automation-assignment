@@ -12,6 +12,10 @@ public class Config {
 
     private final Properties PROPERTIES = load();
 
+    public String env() {
+        return find("env").orElse("prod");
+    }
+
     public String baseUrl() {
         return get("base.url");
     }
@@ -45,8 +49,11 @@ public class Config {
     }
 
     private Optional<String> find(String key) {
-        return Optional.ofNullable(System.getProperty(key, PROPERTIES.getProperty(key)))
-                .filter(value -> !value.isBlank());
+        return nonBlank(System.getProperty(key)).or(() -> nonBlank(PROPERTIES.getProperty(key)));
+    }
+
+    private Optional<String> nonBlank(String value) {
+        return Optional.ofNullable(value).filter(v -> !v.isBlank());
     }
 
     @SneakyThrows

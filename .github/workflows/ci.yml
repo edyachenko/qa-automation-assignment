@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      env:
+        description: Environment (Maven profile)
+        type: choice
+        options: [prod, stage, dev]
+        default: prod
+
+env:
+  TEST_ENV: ${{ inputs.env || 'prod' }}
 
 concurrency:
   group: pages
@@ -28,7 +37,7 @@ jobs:
         env:
           AUTH_USERNAME: ${{ secrets.AUTH_USERNAME }}
           AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
-        run: mvn -B clean test -Dgroups=api,graphql -Dauth.username="$AUTH_USERNAME" -Dauth.password="$AUTH_PASSWORD"
+        run: mvn -B clean test -P"$TEST_ENV" -Dgroups=api,graphql -Dauth.username="$AUTH_USERNAME" -Dauth.password="$AUTH_PASSWORD"
 
       - name: Generate Allure report
         if: always()
@@ -66,7 +75,7 @@ jobs:
         run: mvn -B -q exec:java -Dexec.args="install --with-deps chromium"
 
       - name: Run tests
-        run: mvn -B clean test -Dgroups=ui
+        run: mvn -B clean test -P"$TEST_ENV" -Dgroups=ui
 
       - name: Generate Allure report
         if: always()

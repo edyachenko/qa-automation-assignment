@@ -22,6 +22,10 @@
     <graphql-codegen.version>5.10.0</graphql-codegen.version>
     <playwright.version>1.63.0</playwright.version>
     <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+    <env>prod</env>
+    <base.url/>
+    <graphql.url/>
+    <ui.url/>
   </properties>
 
   <dependencyManagement>
@@ -182,6 +186,10 @@
           <argLine>-javaagent:"${org.aspectj:aspectjweaver:jar}"</argLine>
           <systemPropertyVariables>
             <allure.results.directory>${allure.results.directory}</allure.results.directory>
+            <env>${env}</env>
+            <base.url>${base.url}</base.url>
+            <graphql.url>${graphql.url}</graphql.url>
+            <ui.url>${ui.url}</ui.url>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -204,4 +212,28 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>prod</id>
+    </profile>
+    <profile>
+      <id>stage</id>
+      <properties>
+        <env>stage</env>
+        <base.url>https://restful-booker.herokuapp.com</base.url>
+        <graphql.url>https://us-east-1-shared-usea1-02.cdn.hygraph.com/content/clpvcopq3aavs01usft1idkgj/master</graphql.url>
+        <ui.url>https://demoqa.com</ui.url>
+      </properties>
+    </profile>
+    <profile>
+      <id>dev</id>
+      <properties>
+        <env>dev</env>
+        <base.url>https://restful-booker.herokuapp.com</base.url>
+        <graphql.url>https://us-east-1-shared-usea1-02.cdn.hygraph.com/content/clpvcopq3aavs01usft1idkgj/master</graphql.url>
+        <ui.url>https://demoqa.com</ui.url>
+      </properties>
+    </profile>
+  </profiles>
 </project>

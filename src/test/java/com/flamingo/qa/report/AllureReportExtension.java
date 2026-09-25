@@ -51,7 +51,7 @@ public class AllureReportExtension implements BeforeAllCallback, BeforeEachCallb
         environment.setProperty("GraphQL URL", Config.graphqlUrl());
         environment.setProperty("UI URL", Config.uiUrl());
         environment.setProperty("Services", "Restful Booker, Hygraph, DemoQA");
-        environment.setProperty("Environment", System.getProperty("env", "public"));
+        environment.setProperty("Environment", Config.env());
         environment.setProperty("User", Config.usernameIfSet().orElse("not set"));
         Path directory = Path.of(System.getProperty("allure.results.directory", "target/allure-results"));
         try {
