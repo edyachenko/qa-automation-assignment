@@ -1,6 +1,5 @@
 package com.flamingo.qa.common;
 
-import com.flamingo.qa.config.Config;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -14,14 +13,6 @@ public abstract class ApiClient {
 
     private final String baseUrl;
     private final HttpLoggingFilter logging;
-
-    protected ApiClient() {
-        this(true);
-    }
-
-    protected ApiClient(boolean logBodies) {
-        this(Config.baseUrl(), logBodies);
-    }
 
     protected ApiClient(String baseUrl, boolean logBodies) {
         this.baseUrl = baseUrl;

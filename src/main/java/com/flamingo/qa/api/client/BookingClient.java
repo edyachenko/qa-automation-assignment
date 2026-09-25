@@ -1,6 +1,7 @@
 package com.flamingo.qa.api.client;
 
 import com.flamingo.qa.common.ApiClient;
+import com.flamingo.qa.config.Config;
 import com.flamingo.qa.api.assertions.BookingIdsResponseAssert;
 import com.flamingo.qa.api.assertions.BookingResponseAssert;
 import com.flamingo.qa.api.assertions.CreateBookingResponseAssert;
@@ -9,14 +10,11 @@ import com.flamingo.qa.api.dto.request.BookingRequest;
 import com.flamingo.qa.api.dto.request.PartialBookingRequest;
 import io.qameta.allure.Step;
 import io.restassured.specification.RequestSpecification;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.With;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class BookingClient extends ApiClient {
 
     @With
@@ -25,6 +23,12 @@ public class BookingClient extends ApiClient {
 
     public BookingClient() {
         this(null, new ArrayList<>());
+    }
+
+    private BookingClient(String token, List<Integer> createdBookingIds) {
+        super(Config.baseUrl(), true);
+        this.token = token;
+        this.createdBookingIds = createdBookingIds;
     }
 
     public List<Integer> createdBookingIds() {
